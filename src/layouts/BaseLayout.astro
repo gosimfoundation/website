@@ -1,0 +1,63 @@
+---
+import '../styles/global.css';
+import SiteHeader from '../components/SiteHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import { getLangFromUrl } from '../i18n/utils';
+
+interface Props {
+  title: string;
+  description?: string;
+  /** When true, the header sits over a full-bleed hero (transparent until scroll). */
+  transparentHeader?: boolean;
+}
+
+const { title, description = 'GOSIM — a global home for open-source conferences, stories, and community.', transparentHeader = false } = Astro.props;
+const lang = getLangFromUrl(Astro.url);
+---
+
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="/logo.svg" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+  </head>
+  <body>
+    <SiteHeader transparent={transparentHeader} />
+    <main>
+      <slot />
+    </main>
+    <SiteFooter />
+
+    <script>
+      // Add a subtle background to the fixed header once the page scrolls.
+      const onScroll = () => document.body.classList.toggle('is-scrolled', window.scrollY > 12);
+      onScroll();
+      window.addEventListener('scroll', onScroll, { passive: true });
+    </script>
+  </body>
+</html>
+
+<style is:global>
+  .site-header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: rgba(251, 252, 248, 0.72);
+    border-bottom: 1px solid rgba(16, 36, 42, 0.08);
+    backdrop-filter: blur(18px);
+    opacity: 0;
+    transition: opacity 220ms ease;
+  }
+  body.is-scrolled .site-header::before,
+  .site-header.is-solid::before {
+    opacity: 1;
+  }
+</style>

@@ -1,0 +1,23 @@
+---
+import { getLangFromUrl } from '../i18n/utils';
+
+interface Props {
+  href: string;
+  eyebrow?: string;
+  title: string;
+  description?: string;
+  date?: Date;
+}
+const { href, eyebrow, title, description, date } = Astro.props;
+const lang = getLangFromUrl(Astro.url);
+const dateLabel = date
+  ? new Intl.DateTimeFormat(lang === 'zh' ? 'zh-CN' : 'en-US', { dateStyle: 'medium' }).format(date)
+  : undefined;
+---
+
+<a href={href} class="group block border-t border-line py-6 transition-colors hover:border-ink">
+  {eyebrow && <p class="text-xs font-semibold tracking-wide text-teal uppercase">{eyebrow}</p>}
+  <h3 class="mt-2 text-2xl leading-tight font-semibold group-hover:text-teal">{title}</h3>
+  {description && <p class="mt-2 max-w-prose text-muted">{description}</p>}
+  {dateLabel && <p class="mt-3 text-xs text-muted">{dateLabel}</p>}
+</a>

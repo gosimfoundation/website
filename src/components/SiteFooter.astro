@@ -1,0 +1,53 @@
+---
+import { getLangFromUrl, useTranslations, localizedPath } from '../i18n/utils';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+
+const cols = [
+  {
+    heading: t('nav.stories'),
+    links: [
+      { href: localizedPath('/blog', lang), label: t('nav.stories') },
+      { href: localizedPath('/projects', lang), label: t('nav.projects') },
+    ],
+  },
+  {
+    heading: t('nav.events'),
+    links: [
+      { href: localizedPath('/events', lang), label: t('nav.events') },
+      { href: localizedPath('/galleries', lang), label: t('nav.galleries') },
+    ],
+  },
+  {
+    heading: t('section.newsletter'),
+    links: [{ href: localizedPath('/newsletter', lang), label: t('nav.newsletter') }],
+  },
+];
+---
+
+<footer class="mt-24 border-t border-line bg-mist/40">
+  <div class="mx-auto grid max-w-6xl gap-10 px-5 py-16 sm:px-8 md:grid-cols-[1.4fr_repeat(3,1fr)]">
+    <div>
+      <img src="/logo.svg" alt="GOSIM" width="112" height="32" class="w-28" />
+      <p class="mt-4 max-w-xs text-sm text-muted">{t('footer.tagline')}</p>
+    </div>
+    {
+      cols.map((col) => (
+        <div>
+          <h2 class="text-xs font-semibold tracking-wide text-muted uppercase">{col.heading}</h2>
+          <ul class="mt-4 space-y-2 text-sm">
+            {col.links.map((l) => (
+              <li>
+                <a href={l.href} class="transition-colors hover:text-teal">{l.label}</a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))
+    }
+  </div>
+  <div class="border-t border-line px-5 py-6 text-center text-xs text-muted sm:px-8">
+    © {new Date().getFullYear()} GOSIM. Open source, connected worldwide.
+  </div>
+</footer>

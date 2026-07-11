@@ -1,0 +1,152 @@
+---
+/**
+ * Animated 3D Blue Marble globe with community connection arcs.
+ * Ported from design-preview/selected-globe.html — now imports `three` from
+ * npm and loads the texture from /public. Respects prefers-reduced-motion.
+ */
+---
+
+<div class="globe-stage">
+  <canvas class="globe-canvas" aria-hidden="true"></canvas>
+</div>
+
+<style>
+  .globe-stage {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+  }
+  .globe-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+</style>
+
+<script>
+  import * as THREE from 'three';
+
+  const canvas = document.querySelector<HTMLCanvasElement>('.globe-canvas');
+  if (canvas) {
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const cities = [
+      { name: 'Paris', lat: 48.8566, lon: 2.3522 },
+      { name: 'Shenzhen', lat: 22.5431, lon: 114.0579 },
+      { name: 'Hangzhou', lat: 30.2741, lon: 120.1551 },
+      { name: 'Beijing', lat: 39.9042, lon: 116.4074 },
+      { name: 'San Francisco', lat: 37.7749, lon: -122.4194 },
+      { name: 'Singapore', lat: 1.3521, lon: 103.8198 },
+    ];
+
+    const renderer = new THREE.WebGLRenderer({
+      canvas,
+      alpha: true,
+      antialias: true,
+      powerPreference: 'high-performance',
+    });
+    renderer.setClearColor(0x000000, 0);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 100);
+    camera.position.set(0, 0.08, 7.25);
+
+    const globeGroup = new THREE.Group();
+    globeGroup.rotation.y = 0.72;
+    globeGroup.rotation.x = -0.08;
+    scene.add(globeGroup);
+
+    scene.add(new THREE.AmbientLight(0xffffff, 1.55));
+    const keyLight = new THREE.DirectionalLight(0xffffff, 2.2);
+    keyLight.position.set(-2.8, 2.4, 4.2);
+    scene.add(keyLight);
+    const rimLight = new THREE.DirectionalLight(0x8fdbe5, 1.1);
+    rimLight.position.set(3, -1, -2);
+    scene.add(rimLight);
+
+    const earthMap = new THREE.TextureLoader().load('/earth-blue-marble.jpg', () => renderGlobe());
+    earthMap.colorSpace = THREE.SRGBColorSpace;
+    earthMap.anisotropy = 8;
+
+    const earth = new THREE.Mesh(
+      new THREE.SphereGeometry(1.52, 128, 96),
+      new THREE.MeshStandardMaterial({ map: earthMap, roughness: 0.86, metalness: 0 })
+    );
+    globeGroup.add(earth);
+
+    const atmosphere = new THREE.Mesh(
+      new THREE.SphereGeometry(1.62, 96, 64),
+      new THREE.MeshBasicMaterial({ color: 0x9bdde6, transparent: true, opacity: 0.16, side: THREE.BackSide })
+    );
+    globeGroup.add(atmosphere);
+
+    const markerMaterial = new THREE.MeshBasicMaterial({ color: 0x00a3b5 });
+    const markerHaloMaterial = new THREE.MeshBasicMaterial({ color: 0xf26b4f, transparent: true, opacity: 0.3 });
+
+    function latLonToVector3(lat: number, lon: number, radius = 1.56) {
+      const phi = THREE.MathUtils.degToRad(90 - lat);
+      const theta = THREE.MathUtils.degToRad(lon + 180);
+      return new THREE.Vector3(
+        -radius * Math.sin(phi) * Math.cos(theta),
+        radius * Math.cos(phi),
+        radius * Math.sin(phi) * Math.sin(theta)
+      );
+    }
+
+    function createMarker(city: { lat: number; lon: number }) {
+      const point = latLonToVector3(city.lat, city.lon);
+      const marker = new THREE.Mesh(new THREE.SphereGeometry(0.035, 20, 12), markerMaterial);
+      marker.position.copy(point);
+      globeGroup.add(marker);
+      const halo = new THREE.Mesh(new THREE.SphereGeometry(0.064, 24, 12), markerHaloMaterial);
+      halo.position.copy(point.clone().multiplyScalar(1.006));
+      globeGroup.add(halo);
+    }
+
+    function createConnection(
+      start: { lat: number; lon: number },
+      end: { lat: number; lon: number },
+      color: number
+    ) {
+      const startPoint = latLonToVector3(start.lat, start.lon, 1.58);
+      const endPoint = latLonToVector3(end.lat, end.lon, 1.58);
+      const arcHeight = 1.66 + startPoint.angleTo(endPoint) * 0.16;
+      const midpoint = startPoint.clone().add(endPoint).normalize().multiplyScalar(arcHeight);
+      const curve = new THREE.CatmullRomCurve3([startPoint, midpoint, endPoint]);
+      const route = new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints(curve.getPoints(96)),
+        new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.86, depthTest: true })
+      );
+      globeGroup.add(route);
+    }
+
+    cities.forEach(createMarker);
+    createConnection(cities[0], cities[1], 0xf26b4f);
+    createConnection(cities[1], cities[4], 0x0086a3);
+    createConnection(cities[2], cities[5], 0xbddb74);
+
+    function renderGlobe() {
+      renderer.render(scene, camera);
+    }
+
+    function resizeGlobe() {
+      const { width, height } = canvas!.getBoundingClientRect();
+      renderer.setSize(Math.max(1, width), Math.max(1, height), false);
+      camera.aspect = Math.max(1, width) / Math.max(1, height);
+      camera.updateProjectionMatrix();
+      renderGlobe();
+    }
+
+    function animateGlobe(time = 0) {
+      globeGroup.rotation.y = 0.72 + time * 0.00012;
+      renderGlobe();
+      if (!prefersReducedMotion) requestAnimationFrame(animateGlobe);
+    }
+
+    resizeGlobe();
+    requestAnimationFrame(animateGlobe);
+    window.addEventListener('resize', resizeGlobe);
+  }
+</script>

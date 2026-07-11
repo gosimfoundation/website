@@ -1,0 +1,33 @@
+---
+import { languages } from '../i18n/ui';
+import { getLangFromUrl } from '../i18n/utils';
+
+const current = getLangFromUrl(Astro.url);
+
+// Compute the equivalent path in the other locale by swapping the prefix.
+const segments = Astro.url.pathname.split('/').filter(Boolean);
+const rest = (current === 'en' ? segments : segments.slice(1)).join('/');
+
+function pathFor(lang: string): string {
+  if (lang === 'en') return `/${rest}`;
+  return `/${lang}${rest ? `/${rest}` : ''}`;
+}
+---
+
+<div class="flex items-center gap-2 text-sm">
+  {
+    (Object.keys(languages) as Array<keyof typeof languages>).map((lang, i) => (
+      <>
+        {i > 0 && <span class="text-line" aria-hidden="true">·</span>}
+        <a
+          href={pathFor(lang)}
+          hreflang={lang}
+          aria-current={lang === current ? 'true' : undefined}
+          class={lang === current ? 'font-semibold text-teal' : 'text-muted hover:text-ink'}
+        >
+          {languages[lang]}
+        </a>
+      </>
+    ))
+  }
+</div>

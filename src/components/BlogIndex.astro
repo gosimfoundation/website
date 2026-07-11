@@ -1,0 +1,35 @@
+---
+import { getCollection } from 'astro:content';
+import ArticleCard from './ArticleCard.astro';
+import { getLangFromUrl, useTranslations, localizedPath } from '../i18n/utils';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+
+const posts = (await getCollection('blog', ({ data }) => data.lang === lang && !data.draft)).sort(
+  (a, b) => b.data.date.getTime() - a.data.date.getTime()
+);
+---
+
+<section class="mx-auto max-w-4xl px-5 pt-36 pb-24 sm:px-8">
+  <p class="text-xs font-semibold tracking-wide text-teal uppercase">{t('hero.eyebrow')}</p>
+  <h1 class="mt-2 text-5xl leading-[1.02] font-bold sm:text-6xl">{t('section.latest')}</h1>
+
+  <div class="mt-10">
+    {
+      posts.length === 0 ? (
+        <p class="border-t border-line py-6 text-muted">No stories yet.</p>
+      ) : (
+        posts.map((post) => (
+          <ArticleCard
+            href={localizedPath(`/blog/${post.id.split('/').pop()}`, lang)}
+            eyebrow={post.data.tags[0]}
+            title={post.data.title}
+            description={post.data.description}
+            date={post.data.date}
+          />
+        ))
+      )
+    }
+  </div>
+</section>

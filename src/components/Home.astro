@@ -1,0 +1,114 @@
+---
+import { getCollection } from 'astro:content';
+import Globe from './Globe.astro';
+import ArticleCard from './ArticleCard.astro';
+import { getLangFromUrl, useTranslations, localizedPath } from '../i18n/utils';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+
+const posts = (await getCollection('blog', ({ data }) => data.lang === lang && !data.draft))
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime())
+  .slice(0, 4);
+
+const events = (await getCollection('events', ({ data }) => data.lang === lang))
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime())
+  .slice(0, 3);
+---
+
+<!-- Hero: globe as the global visual anchor over the light Open Campus palette -->
+<section
+  class="relative grid min-h-[100svh] overflow-hidden md:grid-cols-[minmax(0,0.92fr)_minmax(360px,1.08fr)]"
+  style="background: linear-gradient(90deg, var(--color-paper) 0 47%, rgba(234,246,245,0.82) 47% 100%), radial-gradient(circle at 78% 34%, rgba(189,219,116,0.36), transparent 30%);"
+>
+  <div class="relative z-[4] flex min-h-[100svh] flex-col justify-center px-5 pt-32 pb-20 sm:px-8 lg:px-[72px]">
+    <p class="mb-4 text-[13px] font-extrabold tracking-wide text-teal uppercase">{t('hero.eyebrow')}</p>
+    <h1 class="max-w-[12ch] text-5xl leading-[0.95] font-bold sm:text-6xl lg:text-7xl">
+      Open source,<br />connected worldwide.
+    </h1>
+    <p class="mt-6 max-w-md text-lg text-muted">
+      GOSIM is a global home for open-source conferences, project stories, community galleries, and multilingual publishing.
+    </p>
+    <div class="mt-8 flex flex-wrap gap-3">
+      <a href={localizedPath('/events', lang)} class="inline-flex items-center rounded-full bg-teal px-6 py-3 font-semibold text-paper transition-transform hover:-translate-y-0.5">
+        {t('hero.cta.events')}
+      </a>
+      <a href={localizedPath('/blog', lang)} class="inline-flex items-center rounded-full border border-ink px-6 py-3 font-semibold transition-colors hover:bg-ink hover:text-paper">
+        {t('hero.cta.stories')}
+      </a>
+    </div>
+  </div>
+
+  <div class="relative min-h-[52svh] md:min-h-full">
+    <Globe />
+  </div>
+</section>
+
+<!-- Latest stories -->
+<section class="mx-auto max-w-6xl px-5 py-20 sm:px-8">
+  <div class="flex items-baseline justify-between">
+    <h2 class="text-3xl font-semibold">{t('section.latest')}</h2>
+    <a href={localizedPath('/blog', lang)} class="text-sm text-teal hover:underline">{t('readmore')} →</a>
+  </div>
+  <div class="mt-8">
+    {
+      posts.length === 0 ? (
+        <p class="border-t border-line py-6 text-muted">No stories yet.</p>
+      ) : (
+        posts.map((post) => (
+          <ArticleCard
+            href={localizedPath(`/blog/${post.id.split('/').pop()}`, lang)}
+            eyebrow={post.data.tags[0]}
+            title={post.data.title}
+            description={post.data.description}
+            date={post.data.date}
+          />
+        ))
+      )
+    }
+  </div>
+</section>
+
+<!-- Event archive -->
+<section class="mx-auto max-w-6xl px-5 py-8 sm:px-8">
+  <div class="flex items-baseline justify-between">
+    <h2 class="text-3xl font-semibold">{t('section.events')}</h2>
+    <a href={localizedPath('/events', lang)} class="text-sm text-teal hover:underline">{t('readmore')} →</a>
+  </div>
+  <div class="mt-8">
+    {
+      events.length === 0 ? (
+        <p class="border-t border-line py-6 text-muted">No events yet.</p>
+      ) : (
+        events.map((ev) => (
+          <ArticleCard
+            href={localizedPath('/events', lang)}
+            eyebrow={ev.data.status}
+            title={ev.data.title}
+            description={ev.data.description}
+            date={ev.data.date}
+          />
+        ))
+      )
+    }
+  </div>
+</section>
+
+<!-- Newsletter -->
+<section class="mx-auto mt-12 max-w-6xl px-5 sm:px-8">
+  <div class="rounded-3xl bg-mist px-6 py-14 text-center sm:px-12">
+    <h2 class="text-3xl font-semibold">{t('section.newsletter')}</h2>
+    <p class="mx-auto mt-3 max-w-md text-muted">{t('newsletter.prompt')}</p>
+    <form class="mx-auto mt-6 flex max-w-md flex-col gap-3 sm:flex-row">
+      <input
+        type="email"
+        required
+        placeholder={t('newsletter.placeholder')}
+        class="min-h-[48px] flex-1 rounded-full border border-line bg-paper px-5 text-ink outline-none focus:border-teal"
+      />
+      <button type="submit" class="min-h-[48px] rounded-full bg-ink px-6 font-semibold text-paper transition-transform hover:-translate-y-0.5">
+        {t('newsletter.button')}
+      </button>
+    </form>
+  </div>
+</section>

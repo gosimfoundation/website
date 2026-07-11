@@ -1,0 +1,19 @@
+---
+/** Template page for content surfaces that will be filled in later (#4). */
+interface Props {
+  eyebrow?: string;
+  title: string;
+  blurb: string;
+}
+const { eyebrow, title, blurb } = Astro.props;
+---
+
+<section class="mx-auto max-w-4xl px-5 pt-36 pb-24 sm:px-8">
+  {eyebrow && <p class="text-xs font-semibold tracking-wide text-teal uppercase">{eyebrow}</p>}
+  <h1 class="mt-2 text-5xl leading-[1.02] font-bold sm:text-6xl">{title}</h1>
+  <p class="mt-5 max-w-prose text-lg text-muted">{blurb}</p>
+  <p class="mt-8 inline-block rounded-full bg-mist px-4 py-2 text-sm text-muted">
+    Template — content coming soon.
+  </p>
+  <slot />
+</section>
