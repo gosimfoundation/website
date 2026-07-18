@@ -369,24 +369,47 @@ const spotlightIcons = [
 <!-- Newsletter — bold coral color block -->
 <section id="newsletter" class="scroll-mt-24 px-5 pt-16 pb-8 sm:px-8 md:pt-20 lg:px-[72px]">
   <div class="grain reveal relative overflow-hidden rounded-[2rem] bg-coral px-6 py-16 sm:px-14 md:py-20">
-    <div class="relative z-[1] grid gap-8 md:grid-cols-2 md:items-center">
+    <div class="relative z-[1] grid gap-8 md:grid-cols-2 md:items-start">
       <div>
         <p class="tech-label text-ink/70">// {t('section.newsletter')}</p>
         <h2 class="mt-4 text-4xl leading-[0.95] font-bold tracking-tight text-paper sm:text-5xl">
           {t('newsletter.prompt')}
         </h2>
       </div>
-      <form class="flex flex-col gap-3 sm:flex-row">
-        <input
-          type="email"
-          required
-          placeholder={t('newsletter.placeholder')}
-          class="min-h-[54px] flex-1 rounded-full bg-paper px-6 text-ink outline-none placeholder:text-muted focus:ring-2 focus:ring-ink"
-        />
-        <button type="submit" class="tech-label min-h-[54px] rounded-full bg-lime px-8 text-ink transition-transform hover:-translate-y-0.5">
-          {t('newsletter.button')}
-        </button>
-      </form>
+      <div class="md:mt-8">
+        <form
+          class="newsletter-form flex flex-col gap-3"
+          data-newsletter="gosim-newsletter"
+          data-msg-loading={t('newsletter.loading')}
+          data-msg-success={t('newsletter.success')}
+          data-msg-exists={t('newsletter.exists')}
+          data-msg-invalid={t('newsletter.invalid')}
+          data-msg-rate={t('newsletter.rate')}
+          data-msg-error={t('newsletter.error')}
+        >
+          <input
+            type="text"
+            name="name"
+            autocomplete="name"
+            placeholder={t('newsletter.name')}
+            class="min-h-[44px] w-full rounded-full bg-paper px-6 text-ink outline-none placeholder:text-muted focus:ring-2 focus:ring-ink"
+          />
+          <div class="flex flex-col gap-3 sm:flex-row">
+            <input
+              type="email"
+              name="email"
+              required
+              autocomplete="email"
+              placeholder={t('newsletter.placeholder')}
+              class="min-h-[44px] flex-1 rounded-full bg-paper px-6 text-ink outline-none placeholder:text-muted focus:ring-2 focus:ring-ink"
+            />
+            <button type="submit" class="tech-label min-h-[44px] rounded-full bg-lime px-8 text-ink transition-transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-70">
+              {t('newsletter.button')}
+            </button>
+          </div>
+        </form>
+        <p class="newsletter-status mt-3 min-h-[1.25rem] text-sm font-medium text-ink/85" role="status" aria-live="polite"></p>
+      </div>
     </div>
   </div>
 </section>
@@ -441,4 +464,65 @@ const spotlightIcons = [
       el.addEventListener('mouseleave', start);
     });
   }
+</script>
+
+<script>
+  // Newsletter signup — POST to the subscribe API and show inline feedback.
+  // Override the endpoint with PUBLIC_SUBSCRIBE_URL in .env if needed.
+  const SUBSCRIBE_URL = import.meta.env.PUBLIC_SUBSCRIBE_URL || 'https://cfp.gosim.org/api/subscribe';
+
+  document.querySelectorAll('form.newsletter-form').forEach((node) => {
+    const form = node as HTMLFormElement;
+    const input = form.querySelector('input[type="email"]') as HTMLInputElement | null;
+    const button = form.querySelector('button[type="submit"]') as HTMLButtonElement | null;
+    const status = form.parentElement?.querySelector('.newsletter-status') as HTMLElement | null;
+    const d = form.dataset;
+    const say = (msg?: string) => {
+      if (status) status.textContent = msg ?? '';
+    };
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!input || !button) return;
+
+      const email = input.value.trim();
+      const name = (form.querySelector('input[name="name"]') as HTMLInputElement | null)?.value.trim();
+      if (!email) {
+        say(d.msgInvalid);
+        return;
+      }
+
+      const label = button.textContent;
+      button.disabled = true;
+      button.textContent = d.msgLoading ?? 'Subscribing…';
+      say('');
+
+      try {
+        const res = await fetch(SUBSCRIBE_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, ...(name ? { name } : {}), newsletter: d.newsletter }),
+        });
+
+        if (res.status === 429) {
+          say(d.msgRate);
+        } else {
+          const data = await res.json().catch(() => ({}) as any);
+          if (res.ok && data.success) {
+            say(data.status === 'already_subscribed' ? d.msgExists : d.msgSuccess);
+            form.reset();
+          } else if (res.status === 400 || data.error === 'INVALID_EMAIL') {
+            say(d.msgInvalid);
+          } else {
+            say(d.msgError);
+          }
+        }
+      } catch {
+        say(d.msgError);
+      } finally {
+        button.disabled = false;
+        button.textContent = label;
+      }
+    });
+  });
 </script>

@@ -121,5 +121,8 @@ Decap's `git-gateway` backend is Netlify-native. On **GitHub Pages** (static),
 the CMS needs the **GitHub backend behind an external OAuth proxy** (a small
 serverless function) — wire this up before enabling `/admin` in production.
 Until then, `local_backend: true` in `public/admin/config.yml` supports local
-editing via `npx decap-server`. The newsletter form is not yet connected to a
-provider.
+editing via `npx decap-server`.
+
+The **newsletter form** POSTs to `PUBLIC_SUBSCRIBE_URL` (see `.env.example`;
+defaults to `https://cfp.gosim.org/api/subscribe`) with `{ email, newsletter }`.
+The subscribe API must send CORS headers allowing this site's origin.
