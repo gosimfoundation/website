@@ -10,17 +10,20 @@ const { transparent = false } = Astro.props;
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
+const home = localizedPath('/', lang);
 
+// Nav mirrors the homepage sections (anchor links so they work from any page).
 const links = [
-  { href: localizedPath('/blog', lang), label: t('nav.stories') },
-  { href: localizedPath('/events', lang), label: t('nav.events') },
-  { href: localizedPath('/newsletter', lang), label: t('nav.newsletter') },
+  { href: `${home}#about`, label: t('nav.about') },
+  { href: `${home}#pillars`, label: t('nav.pillars') },
+  { href: `${home}#events`, label: t('nav.events') },
+  { href: `${home}#spotlights`, label: t('nav.spotlights') },
 ];
 ---
 
 <header class={`site-header fixed inset-x-0 top-0 z-20 ${transparent ? '' : 'is-solid'}`}>
   <div class="flex min-h-[78px] items-center justify-between gap-6 px-5 py-4 sm:px-8 lg:px-[72px]">
-    <a href={localizedPath('/', lang)} class="shrink-0" aria-label="GOSIM home">
+    <a href={home} class="shrink-0" aria-label="GOSIM home">
       <img src="/logo.svg" alt="GOSIM" width="112" height="32" class="w-28" />
     </a>
 
@@ -30,10 +33,10 @@ const links = [
       ))}
       <LanguagePicker />
       <a
-        href={localizedPath('/events', lang)}
-        class="inline-flex min-h-[42px] items-center rounded-full border border-current px-[18px] py-3 transition-colors hover:bg-ink hover:text-paper"
+        href={`${home}#upcoming`}
+        class="tech-label inline-flex min-h-[42px] items-center rounded-full bg-lime px-5 py-3 text-ink transition-transform hover:-translate-y-0.5"
       >
-        {t('nav.projects')}
+        {t('nav.upcoming')}
       </a>
     </nav>
   </div>

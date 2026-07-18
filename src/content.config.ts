@@ -34,7 +34,19 @@ const events = defineCollection({
     title: z.string(),
     description: z.string(),
     date: z.coerce.date(),
+    // Human-readable date/range shown in the UI (e.g. "May 5–6, 2026").
+    // Falls back to a formatted `date` when omitted.
+    dateLabel: z.string().optional(),
     location: z.string().optional(),
+    // Card background image (path under /public), e.g. "/events/paris.png".
+    image: z.string().optional(),
+    // External event website. When set, event links open this in a new tab
+    // instead of an internal details page.
+    url: z.string().url().optional(),
+    // Call-for-Proposals link — shown as a CTA on the upcoming-event banner.
+    cfp: z.string().url().optional(),
+    // Localized (Chinese) event website; used on /zh, falls back to `url`.
+    urlZh: z.string().url().optional(),
     status: z.enum(['upcoming', 'past', 'draft']).default('upcoming'),
     lang: langEnum.default('en'),
   }),

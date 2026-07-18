@@ -1,0 +1,91 @@
+# Decap CMS configuration — maps the /admin web UI to the Markdown collections.
+#
+# backend: git-gateway works out of the box on Netlify. On GitHub Pages you
+# need the GitHub backend behind an external OAuth proxy (see README). Until
+# that's wired, `local_backend: true` lets editors run the CMS locally with:
+#     npx decap-server        # in one terminal
+#     npm run dev             # in another, then open http://localhost:4321/admin
+backend:
+  name: git-gateway
+  branch: main
+
+local_backend: true
+
+media_folder: "public/uploads"
+public_folder: "/uploads"
+
+collections:
+  - name: "blog_en"
+    label: "Stories (English)"
+    folder: "src/content/blog/en"
+    create: true
+    slug: "{{slug}}"
+    fields:
+      - { label: "Title", name: "title", widget: "string" }
+      - { label: "Description", name: "description", widget: "text" }
+      - { label: "Date", name: "date", widget: "datetime" }
+      - { label: "Language", name: "lang", widget: "hidden", default: "en" }
+      - { label: "Author", name: "author", widget: "string", default: "GOSIM Editorial Team" }
+      - { label: "Tags", name: "tags", widget: "list", default: [], required: false }
+      - { label: "Draft", name: "draft", widget: "boolean", default: false, required: false }
+      - { label: "Body", name: "body", widget: "markdown" }
+
+  - name: "blog_zh"
+    label: "文章 (中文)"
+    folder: "src/content/blog/zh"
+    create: true
+    slug: "{{slug}}"
+    fields:
+      - { label: "标题", name: "title", widget: "string" }
+      - { label: "摘要", name: "description", widget: "text" }
+      - { label: "日期", name: "date", widget: "datetime" }
+      - { label: "Language", name: "lang", widget: "hidden", default: "zh" }
+      - { label: "作者", name: "author", widget: "string", default: "GOSIM 编辑团队" }
+      - { label: "标签", name: "tags", widget: "list", default: [], required: false }
+      - { label: "草稿", name: "draft", widget: "boolean", default: false, required: false }
+      - { label: "正文", name: "body", widget: "markdown" }
+
+  - name: "events"
+    label: "Events"
+    folder: "src/content/events"
+    create: true
+    slug: "{{slug}}"
+    fields:
+      - { label: "Title", name: "title", widget: "string" }
+      - { label: "Description", name: "description", widget: "text" }
+      - { label: "Date", name: "date", widget: "datetime" }
+      - { label: "Date label", name: "dateLabel", widget: "string", required: false, hint: "Shown in the UI, e.g. 'May 5–6, 2026'" }
+      - { label: "Location", name: "location", widget: "string", required: false }
+      - { label: "Card image", name: "image", widget: "image", required: false, hint: "Event/city photo shown as the card background" }
+      - { label: "Website URL", name: "url", widget: "string", required: false, hint: "External event site; the archive links here in a new tab" }
+      - { label: "Call for Proposals URL", name: "cfp", widget: "string", required: false, hint: "CFP link; shown as a button on the upcoming-event banner" }
+      - { label: "Website URL (中文)", name: "urlZh", widget: "string", required: false, hint: "Chinese event site; used on /zh (falls back to Website URL)" }
+      - { label: "Status", name: "status", widget: "select", options: ["upcoming", "past", "draft"], default: "upcoming" }
+      - { label: "Language", name: "lang", widget: "select", options: ["en", "zh"], default: "en" }
+      - { label: "Body", name: "body", widget: "markdown" }
+
+  - name: "projects"
+    label: "Projects"
+    folder: "src/content/projects"
+    create: true
+    slug: "{{slug}}"
+    fields:
+      - { label: "Title", name: "title", widget: "string" }
+      - { label: "Description", name: "description", widget: "text" }
+      - { label: "Date", name: "date", widget: "datetime", required: false }
+      - { label: "Repository", name: "repo", widget: "string", required: false }
+      - { label: "Language", name: "lang", widget: "select", options: ["en", "zh"], default: "en" }
+      - { label: "Body", name: "body", widget: "markdown" }
+
+  - name: "galleries"
+    label: "Galleries"
+    folder: "src/content/galleries"
+    create: true
+    slug: "{{slug}}"
+    fields:
+      - { label: "Title", name: "title", widget: "string" }
+      - { label: "Description", name: "description", widget: "text" }
+      - { label: "Date", name: "date", widget: "datetime", required: false }
+      - { label: "City", name: "city", widget: "string", required: false }
+      - { label: "Language", name: "lang", widget: "select", options: ["en", "zh"], default: "en" }
+      - { label: "Body", name: "body", widget: "markdown" }

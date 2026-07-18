@@ -1,19 +1,60 @@
 ---
 import { getCollection } from 'astro:content';
 import Globe from './Globe.astro';
-import ArticleCard from './ArticleCard.astro';
 import { getLangFromUrl, useTranslations, localizedPath } from '../i18n/utils';
+import { homeContent } from '../i18n/home';
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
+const c = homeContent[lang as keyof typeof homeContent] ?? homeContent.en;
 
-const posts = (await getCollection('blog', ({ data }) => data.lang === lang && !data.draft))
-  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime())
-  .slice(0, 4);
+// Stories/blog section is hidden from the homepage for now. To restore it,
+// un-comment this query and re-add a "Latest stories" section in the template.
+// const posts = (await getCollection('blog', ({ data }) => data.lang === lang && !data.draft))
+//   .sort((a, b) => b.data.date.getTime() - a.data.date.getTime())
+//   .slice(0, 4);
 
-const events = (await getCollection('events', ({ data }) => data.lang === lang))
-  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime())
-  .slice(0, 3);
+let events = (await getCollection('events', ({ data }) => data.lang === lang)).sort(
+  (a, b) => b.data.date.getTime() - a.data.date.getTime()
+);
+// Fall back to English events when this locale has none yet (event content is
+// currently English-only), so the sections still render on /zh/.
+if (events.length === 0) {
+  events = (await getCollection('events', ({ data }) => data.lang === 'en')).sort(
+    (a, b) => b.data.date.getTime() - a.data.date.getTime()
+  );
+}
+const upcomingEvents = events.filter((e) => e.data.status === 'upcoming');
+const pastEvents = events.filter((e) => e.data.status !== 'upcoming');
+
+const dateFmt = new Intl.DateTimeFormat(lang === 'zh' ? 'zh-CN' : 'en-US', { dateStyle: 'medium' });
+
+// Bento spans for the past-events mosaic. 9 items tile perfectly into 4 cols
+// (index 0 is a large 2×2 feature; several 2×1 wides). Extra items fall back to
+// 1×1 and grid-flow-dense fills any gaps.
+const bentoSpans = [
+  'lg:col-span-2 lg:row-span-2',
+  'lg:col-span-2',
+  '',
+  '',
+  '',
+  '',
+  'lg:col-span-2',
+  'lg:col-span-2',
+  'lg:col-span-2',
+];
+
+// Brand accents cycled across the bold sections.
+const accents = ['var(--color-teal)', 'var(--color-coral)', 'var(--color-lime)'];
+
+// Spotlight benefit icons (locale-independent) — zipped by index with
+// c.spotlights.benefits (microphone, two people, paper plane, connected nodes).
+const spotlightIcons = [
+  '<rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="17" x2="12" y2="21"/><line x1="8" y1="21" x2="16" y2="21"/>',
+  '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  '<path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/>',
+  '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>',
+];
 ---
 
 <!-- Hero: globe as the global visual anchor over the light Open Campus palette -->
@@ -21,20 +62,18 @@ const events = (await getCollection('events', ({ data }) => data.lang === lang))
   class="relative grid min-h-[100svh] overflow-hidden md:grid-cols-[minmax(0,0.92fr)_minmax(360px,1.08fr)]"
   style="background: linear-gradient(90deg, var(--color-paper) 0 47%, rgba(234,246,245,0.82) 47% 100%), radial-gradient(circle at 78% 34%, rgba(189,219,116,0.36), transparent 30%);"
 >
+  <div aria-hidden="true" class="hero-pattern pointer-events-none absolute inset-0 z-0"></div>
   <div class="relative z-[4] flex min-h-[100svh] flex-col justify-center px-5 pt-32 pb-20 sm:px-8 lg:px-[72px]">
-    <p class="mb-4 text-[13px] font-extrabold tracking-wide text-teal uppercase">{t('hero.eyebrow')}</p>
-    <h1 class="max-w-[12ch] text-5xl leading-[0.95] font-bold sm:text-6xl lg:text-7xl">
-      Open source,<br />connected worldwide.
-    </h1>
-    <p class="mt-6 max-w-md text-lg text-muted">
-      GOSIM is a global home for open-source conferences, project stories, community galleries, and multilingual publishing.
-    </p>
+    <p class="mb-5 max-w-md text-[13px] font-extrabold tracking-wide text-teal">{t('hero.eyebrow')}</p>
+    <h1
+      class="max-w-[14ch] text-6xl leading-[0.95] font-bold sm:text-7xl lg:text-[5rem]"
+      set:html={c.hero.title}
+    ></h1>
+    <p class="mt-6 max-w-md text-lg text-muted">{c.hero.subtitle}</p>
     <div class="mt-8 flex flex-wrap gap-3">
-      <a href={localizedPath('/events', lang)} class="inline-flex items-center rounded-full bg-teal px-6 py-3 font-semibold text-paper transition-transform hover:-translate-y-0.5">
+      <a href="#events" class="tech-label inline-flex items-center gap-2 rounded-full bg-lime px-6 py-3 text-ink transition-all hover:gap-3">
         {t('hero.cta.events')}
-      </a>
-      <a href={localizedPath('/blog', lang)} class="inline-flex items-center rounded-full border border-ink px-6 py-3 font-semibold transition-colors hover:bg-ink hover:text-paper">
-        {t('hero.cta.stories')}
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
       </a>
     </div>
   </div>
@@ -42,73 +81,364 @@ const events = (await getCollection('events', ({ data }) => data.lang === lang))
   <div class="relative min-h-[52svh] md:min-h-full">
     <Globe />
   </div>
+
+  <a
+    href="#upcoming"
+    class="hero-scroll absolute bottom-6 left-1/2 z-[5] flex -translate-x-1/2 flex-col items-center gap-1.5 text-ink/55 transition-colors hover:text-teal"
+    aria-label={t('scroll.hint')}
+  >
+    <span class="tech-label text-[0.6rem]">{t('scroll.hint')}</span>
+    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M6 9l6 6 6-6" />
+    </svg>
+  </a>
 </section>
 
-<!-- Latest stories -->
-<section class="mx-auto max-w-6xl px-5 py-20 sm:px-8">
-  <div class="flex items-baseline justify-between">
-    <h2 class="text-3xl font-semibold">{t('section.latest')}</h2>
-    <a href={localizedPath('/blog', lang)} class="text-sm text-teal hover:underline">{t('readmore')} →</a>
+{/* Latest stories — hidden for now (restore the posts query above with a section here). */}
+
+<!-- Next event — highlighted right after the hero -->
+{
+  upcomingEvents.length > 0 && (
+    <section id="upcoming" class="scroll-mt-24 px-5 pt-16 pb-4 sm:px-8 md:pt-20 lg:px-[72px]">
+      {upcomingEvents.map((ev) => (
+        <div class="event-frame grain reveal relative overflow-hidden rounded-3xl bg-ink text-paper">
+          {ev.data.image && (
+            <img
+              src={ev.data.image}
+              alt=""
+              loading="lazy"
+              class="pointer-events-none absolute inset-y-0 right-0 hidden h-full w-3/5 object-cover opacity-90 md:block"
+              style="mask-image: linear-gradient(90deg, transparent, #000 42%); -webkit-mask-image: linear-gradient(90deg, transparent, #000 42%);"
+            />
+          )}
+          <div class="pointer-events-none absolute -top-24 -right-16 h-72 w-72 rounded-full bg-coral/30 blur-[110px]"></div>
+          <div class="pointer-events-none absolute -bottom-28 -left-20 h-72 w-72 rounded-full bg-teal/20 blur-[120px]"></div>
+          <div class="relative z-[1] p-8 sm:p-12 md:p-16">
+            <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+              <span class="tech-label rounded-full bg-coral px-3 py-1 text-ink">{c.nextEvent.label}</span>
+              <span class="tech-label text-paper/60">
+                {ev.data.dateLabel ?? dateFmt.format(ev.data.date)}
+                {ev.data.location ? ` · ${ev.data.location}` : ''}
+              </span>
+            </div>
+            <h3 class="mt-6 max-w-3xl text-4xl leading-[1.02] font-bold tracking-tight sm:text-5xl md:text-6xl">
+              {ev.data.title}
+            </h3>
+            {ev.data.description && (
+              <p class="mt-5 max-w-2xl text-lg leading-relaxed text-paper/70">{ev.data.description}</p>
+            )}
+            <div class="mt-8 flex flex-wrap items-center gap-3">
+              {ev.data.cfp && (
+                <a
+                  href={ev.data.cfp}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="tech-label inline-flex items-center gap-2 rounded-full bg-lime px-5 py-2.5 text-ink transition-all hover:gap-3"
+                >
+                  {c.nextEvent.cfp}
+                  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M7 17 17 7M9 7h8v8" />
+                  </svg>
+                </a>
+              )}
+              {ev.data.url && (
+                <a
+                  href={lang === 'zh' && ev.data.urlZh ? ev.data.urlZh : ev.data.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="tech-label inline-flex items-center gap-2 rounded-full border border-lime/45 px-5 py-2.5 text-lime transition-all hover:gap-3 hover:border-lime hover:bg-lime/10"
+                >
+                  {c.nextEvent.cta}
+                  <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M7 17 17 7M9 7h8v8" />
+                  </svg>
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+      ))}
+    </section>
+  )
+}
+
+<!-- Global nexus — repurposed from GOSIM.org's "A Global Nexus for Open Source Innovation" -->
+<section id="about" class="relative scroll-mt-24 overflow-hidden px-5 pt-28 pb-16 sm:px-8 md:pt-36 md:pb-20 lg:px-[72px]">
+  <span
+    aria-hidden="true"
+    class="pointer-events-none absolute -top-10 -right-6 font-display text-[26vw] leading-none font-bold text-ink/[0.04] select-none"
+    >NEXUS</span
+  >
+
+  <div class="relative">
+    <p class="tech-label reveal text-coral">{c.nexus.eyebrow}</p>
+    <h2
+      class="reveal mt-5 max-w-[15ch] text-5xl leading-[0.92] font-bold tracking-tight sm:text-6xl lg:text-[5rem]"
+      style="--reveal-delay: 60ms"
+      set:html={c.nexus.heading}
+    ></h2>
+
+    <div class="mt-14 grid gap-x-16 gap-y-12 md:grid-cols-[1.15fr_0.85fr]">
+      <div class="reveal space-y-6 text-lg leading-relaxed text-muted sm:text-xl" style="--reveal-delay: 120ms">
+        {c.nexus.paras.map((para) => <p>{para}</p>)}
+        <a
+          href={localizedPath('/founders', lang)}
+          class="tech-label inline-flex items-center gap-2 rounded-full bg-lime px-6 py-3 text-ink transition-all hover:gap-3"
+        >
+          {c.nexus.foundersCta}
+          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M5 12h14M13 6l6 6-6 6" />
+          </svg>
+        </a>
+      </div>
+
+      <div class="nexus-list reveal self-end" style="--reveal-delay: 180ms">
+        {
+          c.nexus.highlights.map((point, i) => (
+            <div
+              class="nexus-item flex items-center gap-5 border-b border-ink/15 py-6 first:border-t"
+              style={`--accent: ${accents[i]}`}
+            >
+              <span class="nexus-dot h-3 w-3 shrink-0 rounded-full"></span>
+              <span class="nexus-text text-2xl leading-tight font-semibold tracking-tight text-ink">{point}</span>
+            </div>
+          ))
+        }
+      </div>
+    </div>
   </div>
-  <div class="mt-8">
-    {
-      posts.length === 0 ? (
-        <p class="border-t border-line py-6 text-muted">No stories yet.</p>
-      ) : (
-        posts.map((post) => (
-          <ArticleCard
-            href={localizedPath(`/blog/${post.id.split('/').pop()}`, lang)}
-            eyebrow={post.data.tags[0]}
-            title={post.data.title}
-            description={post.data.description}
-            date={post.data.date}
-          />
+</section>
+
+<!-- Three pillars — dark showpiece, repurposed from GOSIM.org's "Three Pillars of GOSIM" -->
+<section id="pillars" class="grain relative scroll-mt-24 overflow-hidden bg-ink text-paper">
+  <div aria-hidden="true" class="pointer-events-none absolute -top-1/4 -left-1/4 h-[60vh] w-[60vh] rounded-full bg-teal/25 blur-[130px]"></div>
+  <div aria-hidden="true" class="pointer-events-none absolute -right-1/4 -bottom-1/4 h-[55vh] w-[55vh] rounded-full bg-coral/20 blur-[130px]"></div>
+
+  <div class="relative z-[1] px-5 py-16 sm:px-8 md:py-20 lg:px-[72px]">
+    <p class="tech-label reveal text-lime">{c.pillars.eyebrow}</p>
+    <h2 class="reveal mt-5 text-5xl font-bold tracking-tight sm:text-6xl lg:text-[4.5rem]" style="--reveal-delay: 60ms">
+      {c.pillars.heading}
+    </h2>
+
+    <div class="mt-16 grid gap-px overflow-hidden rounded-2xl border border-white/10 bg-white/10 md:grid-cols-3">
+      {
+        c.pillars.items.map((p, i) => (
+          <article
+            class="group reveal relative overflow-hidden bg-ink px-8 py-12 sm:px-10"
+            style={`--accent: ${accents[i]}; --reveal-delay: ${i * 120}ms`}
+          >
+            <span class="ghost-numeral block text-[6.5rem]">{`0${i + 1}`}</span>
+            <h3 class="mt-6 text-2xl font-semibold">{p.title}</h3>
+            <p class="mt-4 leading-relaxed text-white/55">{p.body}</p>
+            <span class="absolute top-0 left-0 h-1 w-0 transition-all duration-500 group-hover:w-full" style={`background: ${accents[i]}`}></span>
+          </article>
         ))
+      }
+    </div>
+  </div>
+</section>
+
+<!-- Events — featured upcoming banner + past archive (prototype hairline grid) -->
+<section id="events" class="scroll-mt-24 bg-mist">
+  <div class="px-5 py-16 sm:px-8 md:py-20 lg:px-[72px]">
+    {/* Past events — full-width uneven bento mosaic */}
+    <div class="reveal grid gap-x-12 gap-y-6 md:grid-cols-[1.6fr_1fr] md:items-end">
+      <div>
+        <p class="tech-label text-teal">{c.events.eyebrow}</p>
+        <h2 class="mt-3 text-5xl leading-[1.03] font-bold tracking-tight sm:text-6xl lg:text-[4.5rem]">
+          {c.events.heading}
+        </h2>
+      </div>
+      <p class="max-w-md text-muted md:pb-2">
+        {c.events.description}
+      </p>
+    </div>
+
+    {
+      pastEvents.length === 0 ? (
+        <p class="mt-10 text-muted">No past events yet.</p>
+      ) : (
+        <div class="mt-12 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:auto-rows-[13rem] lg:grid-flow-row-dense lg:grid-cols-4">
+          {pastEvents.map((ev, i) => (
+            <a
+              href={ev.data.url ?? localizedPath('/events', lang)}
+              target={ev.data.url ? '_blank' : undefined}
+              rel={ev.data.url ? 'noopener noreferrer' : undefined}
+              class={`group reveal relative flex min-h-[13rem] flex-col overflow-hidden rounded-xl bg-ink text-paper ${bentoSpans[i] ?? ''}`}
+              style={`--reveal-delay: ${Math.min(i, 6) * 50}ms`}
+            >
+              {ev.data.image && (
+                <img
+                  src={ev.data.image}
+                  alt=""
+                  loading="lazy"
+                  class="absolute inset-0 h-full w-full object-cover opacity-85 transition-transform duration-[600ms] group-hover:scale-105"
+                />
+              )}
+              <div class="absolute inset-0 bg-gradient-to-t from-ink/95 via-ink/50 to-ink/20"></div>
+              <div class="relative z-[1] flex flex-1 flex-col justify-between p-6">
+                <div class="flex items-start justify-between gap-2">
+                  <span class="tech-label text-paper/75">{ev.data.dateLabel ?? dateFmt.format(ev.data.date)}</span>
+                  <svg
+                    class="h-4 w-4 shrink-0 text-paper/70 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-paper"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M7 17 17 7M9 7h8v8" />
+                  </svg>
+                </div>
+                <div class="mt-8">
+                  <h3 class={`font-semibold leading-[1.1] ${i === 0 ? 'text-2xl sm:text-3xl' : 'text-xl'}`}>{ev.data.title}</h3>
+                  {ev.data.location && <span class="mt-1.5 block text-sm text-paper/70">{ev.data.location}</span>}
+                </div>
+              </div>
+            </a>
+          ))}
+        </div>
       )
     }
   </div>
 </section>
 
-<!-- Event archive -->
-<section class="mx-auto max-w-6xl px-5 py-8 sm:px-8">
-  <div class="flex items-baseline justify-between">
-    <h2 class="text-3xl font-semibold">{t('section.events')}</h2>
-    <a href={localizedPath('/events', lang)} class="text-sm text-teal hover:underline">{t('readmore')} →</a>
-  </div>
-  <div class="mt-8">
-    {
-      events.length === 0 ? (
-        <p class="border-t border-line py-6 text-muted">No events yet.</p>
-      ) : (
-        events.map((ev) => (
-          <ArticleCard
-            href={localizedPath('/events', lang)}
-            eyebrow={ev.data.status}
-            title={ev.data.title}
-            description={ev.data.description}
-            date={ev.data.date}
-          />
-        ))
-      )
-    }
+<!-- Spotlights — year-round showcase program (links out to spotlight.gosim.org) -->
+<section id="spotlights" class="grain relative scroll-mt-24 overflow-hidden bg-ink text-paper">
+  <div aria-hidden="true" class="pointer-events-none absolute -top-1/4 right-0 h-[55vh] w-[55vh] rounded-full bg-lime/20 blur-[130px]"></div>
+  <div aria-hidden="true" class="pointer-events-none absolute -bottom-1/4 -left-1/4 h-[50vh] w-[50vh] rounded-full bg-teal/20 blur-[130px]"></div>
+
+  <div class="relative z-[1] px-5 py-16 sm:px-8 md:py-20 lg:px-[72px]">
+    <div class="grid gap-12 md:grid-cols-[0.9fr_1.1fr] md:gap-16">
+      <!-- Intro -->
+      <div class="reveal">
+        <p class="tech-label text-lime">{c.spotlights.eyebrow}</p>
+        <h2 class="mt-4 text-4xl leading-[1.0] font-bold tracking-tight sm:text-5xl md:text-6xl">
+          {c.spotlights.heading}
+        </h2>
+        <p class="mt-6 max-w-md text-lg leading-relaxed text-paper/65">
+          {c.spotlights.description}
+        </p>
+        <a
+          href="https://spotlight.gosim.org"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="tech-label mt-8 inline-flex items-center gap-2 rounded-full bg-lime px-6 py-3 text-ink transition-all hover:gap-3"
+        >
+          {c.spotlights.cta}
+          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M7 17 17 7M9 7h8v8" />
+          </svg>
+        </a>
+      </div>
+
+      <!-- What selected projects receive -->
+      <div class="reveal" style="--reveal-delay: 120ms">
+        <p class="tech-label text-paper/50">{c.spotlights.benefitsLabel}</p>
+        <div class="mt-6 grid gap-px overflow-hidden rounded-2xl bg-white/12 sm:grid-cols-2">
+          {
+            c.spotlights.benefits.map((b, i) => (
+              <div class="bg-ink p-6">
+                <div class="flex items-start justify-between">
+                  <svg
+                    class="h-7 w-7 text-lime"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.75"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                    set:html={spotlightIcons[i]}
+                  />
+                  <span class="font-mono text-xs text-paper/35">{`0${i + 1}`}</span>
+                </div>
+                <h3 class="mt-4 text-lg font-semibold">{b.title}</h3>
+                <p class="mt-1.5 text-sm leading-relaxed text-paper/60">{b.desc}</p>
+              </div>
+            ))
+          }
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
-<!-- Newsletter -->
-<section class="mx-auto mt-12 max-w-6xl px-5 sm:px-8">
-  <div class="rounded-3xl bg-mist px-6 py-14 text-center sm:px-12">
-    <h2 class="text-3xl font-semibold">{t('section.newsletter')}</h2>
-    <p class="mx-auto mt-3 max-w-md text-muted">{t('newsletter.prompt')}</p>
-    <form class="mx-auto mt-6 flex max-w-md flex-col gap-3 sm:flex-row">
-      <input
-        type="email"
-        required
-        placeholder={t('newsletter.placeholder')}
-        class="min-h-[48px] flex-1 rounded-full border border-line bg-paper px-5 text-ink outline-none focus:border-teal"
-      />
-      <button type="submit" class="min-h-[48px] rounded-full bg-ink px-6 font-semibold text-paper transition-transform hover:-translate-y-0.5">
-        {t('newsletter.button')}
-      </button>
-    </form>
+<!-- Newsletter — bold coral color block -->
+<section id="newsletter" class="scroll-mt-24 px-5 pt-16 pb-8 sm:px-8 md:pt-20 lg:px-[72px]">
+  <div class="grain reveal relative overflow-hidden rounded-[2rem] bg-coral px-6 py-16 sm:px-14 md:py-20">
+    <div class="relative z-[1] grid gap-8 md:grid-cols-2 md:items-center">
+      <div>
+        <p class="tech-label text-ink/70">// {t('section.newsletter')}</p>
+        <h2 class="mt-4 text-4xl leading-[0.95] font-bold tracking-tight text-paper sm:text-5xl">
+          {t('newsletter.prompt')}
+        </h2>
+      </div>
+      <form class="flex flex-col gap-3 sm:flex-row">
+        <input
+          type="email"
+          required
+          placeholder={t('newsletter.placeholder')}
+          class="min-h-[54px] flex-1 rounded-full bg-paper px-6 text-ink outline-none placeholder:text-muted focus:ring-2 focus:ring-ink"
+        />
+        <button type="submit" class="tech-label min-h-[54px] rounded-full bg-lime px-8 text-ink transition-transform hover:-translate-y-0.5">
+          {t('newsletter.button')}
+        </button>
+      </form>
+    </div>
   </div>
 </section>
+
+<script>
+  // Staggered scroll reveals (progressive enhancement; CSS handles reduced-motion / no-JS).
+  const els = document.querySelectorAll('.reveal');
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!reduce && 'IntersectionObserver' in window) {
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-in');
+            io.unobserve(entry.target);
+          }
+        }
+      },
+      { rootMargin: '0px 0px -10% 0px', threshold: 0.12 }
+    );
+    els.forEach((el) => io.observe(el));
+  } else {
+    els.forEach((el) => el.classList.add('is-in'));
+  }
+</script>
+
+<script>
+  // Nexus highlights: auto-cycle an accent "spotlight" through the values;
+  // hover pauses and pins the hovered row. Skipped under reduced motion.
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const list = document.querySelector('.nexus-list');
+  if (list && !reduceMotion) {
+    const items = Array.from(list.querySelectorAll('.nexus-item'));
+    let active = 0;
+    let timer = 0;
+    const setActive = (n) => {
+      active = (n + items.length) % items.length;
+      items.forEach((el, i) => el.classList.toggle('is-active', i === active));
+    };
+    const start = () => {
+      timer = window.setInterval(() => setActive(active + 1), 2600);
+    };
+    const stop = () => window.clearInterval(timer);
+    list.classList.add('is-cycling');
+    setActive(0);
+    start();
+    items.forEach((el, i) => {
+      el.addEventListener('mouseenter', () => {
+        stop();
+        setActive(i);
+      });
+      el.addEventListener('mouseleave', start);
+    });
+  }
+</script>

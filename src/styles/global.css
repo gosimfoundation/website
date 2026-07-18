@@ -38,6 +38,7 @@
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-display: "Clash Display", "Inter", ui-sans-serif, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "SFMono-Regular", Menlo, "Cascadia Mono", monospace;
 
   --color-ink: #10242a;
   --color-muted: #5a6c70;
@@ -73,5 +74,191 @@
   a {
     color: inherit;
     text-decoration: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Bold redesign utilities — tech labels, grain texture, scroll reveals,
+   outlined display numerals.
+--------------------------------------------------------------------------- */
+
+/* Monospace tech eyebrow, e.g. "// ABOUT GOSIM" */
+.tech-label {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+/* Fine grain overlay for depth on dark blocks (SVG fractal noise, data-URI). */
+.grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.4;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Giant outlined display numeral that fills with its accent on hover. */
+.ghost-numeral {
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 0.8;
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--accent, currentColor);
+  transition: color 400ms ease;
+}
+.group:hover .ghost-numeral {
+  color: var(--accent, currentColor);
+}
+
+/* Staggered scroll reveal. Elements start hidden; .is-in reveals them. */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity 700ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+  will-change: opacity, transform;
+}
+.reveal.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* No-JS fallback: never leave revealed content invisible. */
+@media (scripting: none) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Nexus highlights — an accent "spotlight" that cycles through the values.
+   Static + readable without JS; JS adds .is-cycling and toggles .is-active.
+--------------------------------------------------------------------------- */
+.nexus-dot {
+  background: var(--color-line);
+  transition:
+    background 450ms ease,
+    transform 450ms ease,
+    box-shadow 450ms ease;
+}
+.nexus-text {
+  transition:
+    color 450ms ease,
+    transform 450ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 450ms ease;
+}
+/* Only dim the non-active rows once JS is driving the cycle. */
+.nexus-list.is-cycling .nexus-item:not(.is-active) .nexus-text {
+  opacity: 0.38;
+}
+.nexus-item.is-active .nexus-dot {
+  background: var(--accent);
+  transform: scale(1.6);
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+.nexus-item.is-active .nexus-text {
+  transform: translateX(10px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nexus-dot,
+  .nexus-text {
+    transition: none;
+  }
+}
+
+/* Hero scroll cue — a gently bouncing chevron hinting at content below. */
+.hero-scroll svg {
+  animation: hero-scroll-bounce 1.8s ease-in-out infinite;
+}
+@keyframes hero-scroll-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translateY(6px);
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-scroll svg {
+    animation: none;
+  }
+}
+
+/* Hero pattern — concentric rings radiating from the left (like a broadcast
+   signal), masked to fade out before the globe on the right. */
+.hero-pattern {
+  background-image: repeating-radial-gradient(
+    circle at 8% 42%,
+    rgba(16, 36, 42, 0.12) 0 1.5px,
+    transparent 1.5px 40px
+  );
+  -webkit-mask-image: linear-gradient(90deg, #000 0 45%, transparent 64%);
+  mask-image: linear-gradient(90deg, #000 0 45%, transparent 64%);
+}
+
+/* ---------------------------------------------------------------------------
+   Animated gradient border — the featured "Next event" card. A conic gradient
+   in the brand accents rotates slowly around the card edge (masked to a ring).
+--------------------------------------------------------------------------- */
+@property --event-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+.event-frame {
+  box-shadow:
+    0 14px 55px -14px rgba(242, 107, 79, 0.5),
+    0 0 60px -14px rgba(0, 180, 204, 0.45);
+}
+.event-frame::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  padding: 3px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from var(--event-angle),
+    #10c4dc,
+    var(--color-coral),
+    var(--color-lime),
+    #10c4dc
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  animation: event-frame-spin 5s linear infinite;
+}
+@keyframes event-frame-spin {
+  to {
+    --event-angle: 360deg;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .event-frame::before {
+    animation: none;
   }
 }

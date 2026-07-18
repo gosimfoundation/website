@@ -1,14 +1,13 @@
 ---
-title: "GOSIM Paris 2026"
-description: "Program, speakers, sponsor notes, and community sessions."
-date: 2026-05-06
+title: "2026 GOSIM AI Conference: Paris, France"
+description: "Held at Station F, the world's largest startup campus — bringing developers, researchers, and industry leaders together around AI, agents, models, and open-source innovation."
+date: 2026-05-05
+dateLabel: "May 5–6, 2026"
 location: "Paris, France"
-status: "upcoming"
+image: "/events/paris-2026.jpg"
+url: "https://paris2026.gosim.org/"
+status: "past"
 lang: en
 ---
 
-GOSIM Paris 2026 brings together maintainers, founders, and researchers for
-two days of talks, workshops, and hallway conversations on open-source AI
-infrastructure and cross-border collaboration.
-
-Full schedule and CFP details will be published here.
+GOSIM Paris 2026 explored the intersection of artificial intelligence and open-source innovation.

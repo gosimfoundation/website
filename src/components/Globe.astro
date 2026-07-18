@@ -37,6 +37,9 @@
       { name: 'Beijing', lat: 39.9042, lon: 116.4074 },
       { name: 'San Francisco', lat: 37.7749, lon: -122.4194 },
       { name: 'Singapore', lat: 1.3521, lon: 103.8198 },
+      { name: 'Shanghai', lat: 31.2304, lon: 121.4737 },
+      // One dot for the Netherlands cluster (Utrecht ≈ Delft at this scale).
+      { name: 'Utrecht', lat: 52.0907, lon: 5.1214 },
     ];
 
     const renderer = new THREE.WebGLRenderer({
@@ -55,7 +58,9 @@
 
     const globeGroup = new THREE.Group();
     globeGroup.rotation.y = 0.72;
-    globeGroup.rotation.x = -0.08;
+    // Tilt the north pole toward the camera so the northern hemisphere (where
+    // the event cities are) faces us and Antarctica stays out of view.
+    globeGroup.rotation.x = 0.3;
     scene.add(globeGroup);
 
     scene.add(new THREE.AmbientLight(0xffffff, 1.55));
@@ -97,10 +102,10 @@
 
     function createMarker(city: { lat: number; lon: number }) {
       const point = latLonToVector3(city.lat, city.lon);
-      const marker = new THREE.Mesh(new THREE.SphereGeometry(0.035, 20, 12), markerMaterial);
+      const marker = new THREE.Mesh(new THREE.SphereGeometry(0.0175, 20, 12), markerMaterial);
       marker.position.copy(point);
       globeGroup.add(marker);
-      const halo = new THREE.Mesh(new THREE.SphereGeometry(0.064, 24, 12), markerHaloMaterial);
+      const halo = new THREE.Mesh(new THREE.SphereGeometry(0.032, 24, 12), markerHaloMaterial);
       halo.position.copy(point.clone().multiplyScalar(1.006));
       globeGroup.add(halo);
     }
@@ -139,8 +144,25 @@
       renderGlobe();
     }
 
+    // Spin faster while the pointer is over the globe; ease smoothly between
+    // the resting and hover speeds so it accelerates/decelerates naturally.
+    const baseSpeed = 0.00012; // radians per ms
+    const hoverSpeed = baseSpeed * 5;
+    let currentSpeed = baseSpeed;
+    let targetSpeed = baseSpeed;
+    let angleY = 0.72;
+    let lastTime = 0;
+
+    canvas.addEventListener('pointerenter', () => (targetSpeed = hoverSpeed));
+    canvas.addEventListener('pointerleave', () => (targetSpeed = baseSpeed));
+    canvas.style.cursor = 'grab';
+
     function animateGlobe(time = 0) {
-      globeGroup.rotation.y = 0.72 + time * 0.00012;
+      const dt = lastTime ? Math.min(time - lastTime, 60) : 16;
+      lastTime = time;
+      currentSpeed += (targetSpeed - currentSpeed) * Math.min(1, dt * 0.004);
+      angleY += currentSpeed * dt;
+      globeGroup.rotation.y = angleY;
       renderGlobe();
       if (!prefersReducedMotion) requestAnimationFrame(animateGlobe);
     }

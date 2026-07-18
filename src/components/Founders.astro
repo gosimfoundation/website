@@ -1,0 +1,76 @@
+---
+import { getLangFromUrl } from '../i18n/utils';
+import { founders, foundersPage } from '../i18n/founders';
+
+const lang = getLangFromUrl(Astro.url);
+const page = foundersPage[lang as keyof typeof foundersPage] ?? foundersPage.en;
+---
+
+<!-- Hero -->
+<section class="relative overflow-hidden px-5 pt-36 pb-16 sm:px-8 md:pt-40 md:pb-20 lg:px-[72px]">
+  <span
+    aria-hidden="true"
+    class="pointer-events-none absolute -top-8 -right-6 font-display text-[24vw] leading-none font-bold text-ink/[0.04] select-none"
+    >GOSIM</span
+  >
+  <div class="relative mx-auto max-w-6xl">
+    <p class="tech-label text-coral">{page.eyebrow}</p>
+    <h1 class="mt-4 text-6xl leading-[0.98] font-bold tracking-tight sm:text-7xl lg:text-[5rem]">{page.heading}</h1>
+    <p class="mt-6 max-w-2xl text-lg leading-relaxed text-muted sm:text-xl">{page.intro}</p>
+  </div>
+</section>
+
+<!-- Founders, alternating -->
+<section class="relative overflow-hidden px-5 pb-28 sm:px-8 lg:px-[72px]">
+  <div aria-hidden="true" class="pointer-events-none absolute -top-10 -left-24 h-[48vh] w-[48vh] rounded-full bg-teal/12 blur-[130px]"></div>
+  <div aria-hidden="true" class="pointer-events-none absolute -right-28 bottom-10 h-[44vh] w-[44vh] rounded-full bg-coral/12 blur-[130px]"></div>
+  <div class="relative mx-auto max-w-6xl space-y-20 md:space-y-28">
+    {
+      founders.map((f, i) => {
+        const fc = f[lang as keyof typeof foundersPage] ?? f.en;
+        return (
+          <article
+            class={`flex flex-col gap-10 md:flex-row md:items-center md:gap-16 ${i % 2 === 1 ? 'md:flex-row-reverse' : ''}`}
+          >
+            <div class="relative mx-auto w-full max-w-xs md:mx-0 md:w-[32%] md:max-w-[18rem] md:shrink-0">
+              <div
+                class={`absolute inset-0 translate-y-4 rounded-3xl ${i % 2 === 1 ? '-translate-x-4' : 'translate-x-4'}`}
+                style={`background: ${f.accent}; opacity: 0.16`}
+                aria-hidden="true"
+              />
+              <img
+                src={f.image}
+                alt={fc.name}
+                loading="lazy"
+                class="relative aspect-square w-full rounded-3xl object-cover shadow-[0_20px_50px_-24px_rgba(16,36,42,0.45)]"
+              />
+            </div>
+
+            <div class="md:flex-1">
+              <h2 class="text-4xl font-bold tracking-tight sm:text-5xl">{fc.name}</h2>
+              <p class="tech-label mt-3" style={`color: ${f.accent}`}>
+                {fc.role} ·{' '}
+                <a
+                  href={f.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="inline-flex items-center gap-1 underline-offset-2 hover:underline"
+                >
+                  {f.linkLabel}
+                  <svg class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M7 17 17 7M9 7h8v8" />
+                  </svg>
+                </a>
+              </p>
+              <div class="mt-7 max-w-prose space-y-4 text-lg leading-relaxed text-ink/80">
+                {fc.bio.map((p) => (
+                  <p>{p}</p>
+                ))}
+              </div>
+            </div>
+          </article>
+        );
+      })
+    }
+  </div>
+</section>

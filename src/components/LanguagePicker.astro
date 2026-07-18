@@ -4,7 +4,7 @@ import { getLangFromUrl } from '../i18n/utils';
 
 const current = getLangFromUrl(Astro.url);
 
-// Compute the equivalent path in the other locale by swapping the prefix.
+// Compute the equivalent path in each locale by swapping the prefix.
 const segments = Astro.url.pathname.split('/').filter(Boolean);
 const rest = (current === 'en' ? segments : segments.slice(1)).join('/');
 
@@ -12,22 +12,72 @@ function pathFor(lang: string): string {
   if (lang === 'en') return `/${rest}`;
   return `/${lang}${rest ? `/${rest}` : ''}`;
 }
+
+const locales = Object.keys(languages) as Array<keyof typeof languages>;
 ---
 
-<div class="flex items-center gap-2 text-sm">
-  {
-    (Object.keys(languages) as Array<keyof typeof languages>).map((lang, i) => (
-      <>
-        {i > 0 && <span class="text-line" aria-hidden="true">·</span>}
-        <a
-          href={pathFor(lang)}
-          hreflang={lang}
-          aria-current={lang === current ? 'true' : undefined}
-          class={lang === current ? 'font-semibold text-teal' : 'text-muted hover:text-ink'}
-        >
-          {languages[lang]}
-        </a>
-      </>
-    ))
+<details class="lang-picker relative">
+  <summary
+    class="flex cursor-pointer list-none items-center gap-1 rounded-full py-2 text-ink/70 transition-colors hover:text-teal"
+    aria-label="Change language"
+    title="Change language"
+  >
+    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18" />
+      <path d="M12 3c2.5 2.5 3.8 5.7 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.7-3.8-9s1.3-6.5 3.8-9Z" />
+    </svg>
+    <svg class="lang-caret h-3 w-3 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M6 9l6 6 6-6" />
+    </svg>
+  </summary>
+
+  <ul class="absolute right-0 top-full z-30 mt-2 min-w-[8.5rem] overflow-hidden rounded-xl border border-line bg-paper py-1 shadow-[0_16px_40px_-16px_rgba(16,36,42,0.4)]">
+    {
+      locales.map((lang) => (
+        <li>
+          <a
+            href={pathFor(lang)}
+            hreflang={lang}
+            aria-current={lang === current ? 'true' : undefined}
+            class={`flex items-center justify-between gap-4 px-4 py-2 text-sm transition-colors hover:bg-mist ${lang === current ? 'font-semibold text-teal' : 'text-ink'}`}
+          >
+            {languages[lang]}
+            {lang === current && (
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M5 13l4 4L19 7" />
+              </svg>
+            )}
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</details>
+
+<style>
+  .lang-picker summary::-webkit-details-marker {
+    display: none;
   }
-</div>
+  .lang-picker[open] .lang-caret {
+    transform: rotate(180deg);
+  }
+</style>
+
+<script>
+  // Close the language dropdown on outside click or Escape.
+  const closeAll = (except?: Element) =>
+    document.querySelectorAll('details.lang-picker[open]').forEach((d) => {
+      if (d !== except) d.removeAttribute('open');
+    });
+
+  document.addEventListener('click', (e) => {
+    const target = e.target as Node;
+    document.querySelectorAll('details.lang-picker[open]').forEach((d) => {
+      if (!d.contains(target)) d.removeAttribute('open');
+    });
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeAll();
+  });
+</script>
