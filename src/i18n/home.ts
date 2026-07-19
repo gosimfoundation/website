@@ -8,7 +8,7 @@
 export const homeContent = {
   en: {
     hero: {
-      title: 'Global <span class="whitespace-nowrap">Open-Source</span> Innovation Meetup',
+      title: 'Global <span class="whitespace-nowrap brand-gradient">Open-Source</span> Innovation Meetup',
       subtitle:
         'GOSIM brings the open-source community together — nurturing the brightest grassroots projects across culture and language barriers, through its Conference, Workshop, and year-round Spotlight.',
       cta: 'Explore events',
@@ -66,7 +66,7 @@ export const homeContent = {
 
   zh: {
     hero: {
-      title: '全球开源创新汇',
+      title: '全球<span class="brand-gradient">开源</span>创新汇',
       subtitle: 'GOSIM 汇聚全球开源社区——通过大会、工作坊与全年的聚焦计划，培育最杰出的草根项目，跨越文化与语言的边界。',
       cta: '浏览活动',
     },

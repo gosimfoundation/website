@@ -90,6 +90,14 @@
   text-transform: uppercase;
 }
 
+/* Teal→coral gradient fill for an accented brand phrase (e.g. the hero title). */
+.brand-gradient {
+  background: linear-gradient(100deg, var(--color-teal), var(--color-coral));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
 /* Fine grain overlay for depth on dark blocks (SVG fractal noise, data-URI). */
 .grain::after {
   content: "";
@@ -204,16 +212,52 @@
   }
 }
 
+/* Hero background. Mobile stacks copy over globe, so the split runs
+   horizontally (paper behind the copy, mist behind the globe). From md up the
+   layout is side-by-side, so the split runs vertically at the column seam. */
+.hero-bg {
+  background:
+    linear-gradient(180deg, var(--color-paper) 0 64%, rgba(234, 246, 245, 0.82) 64% 100%),
+    radial-gradient(circle at 50% 82%, rgba(189, 219, 116, 0.28), transparent 42%);
+}
+@media (min-width: 768px) {
+  .hero-bg {
+    background:
+      linear-gradient(90deg, var(--color-paper) 0 47%, rgba(234, 246, 245, 0.82) 47% 100%),
+      radial-gradient(circle at 78% 34%, rgba(189, 219, 116, 0.36), transparent 30%);
+  }
+}
+
 /* Hero pattern — concentric rings radiating from the left (like a broadcast
-   signal), masked to fade out before the globe on the right. */
+   signal), masked to fade out before the globe on the right. The ring phase
+   (--hero-wave) animates over one 40px period so the rings ripple outward from
+   the fixed center and loop seamlessly. */
+@property --hero-wave {
+  syntax: "<length>";
+  initial-value: 0px;
+  inherits: false;
+}
 .hero-pattern {
   background-image: repeating-radial-gradient(
     circle at 8% 42%,
-    rgba(16, 36, 42, 0.12) 0 1.5px,
-    transparent 1.5px 40px
+    rgba(16, 36, 42, 0.12) var(--hero-wave),
+    rgba(16, 36, 42, 0.12) calc(var(--hero-wave) + 1.5px),
+    transparent calc(var(--hero-wave) + 1.5px),
+    transparent calc(var(--hero-wave) + 40px)
   );
   -webkit-mask-image: linear-gradient(90deg, #000 0 45%, transparent 64%);
   mask-image: linear-gradient(90deg, #000 0 45%, transparent 64%);
+  animation: hero-wave 4s linear infinite;
+}
+@keyframes hero-wave {
+  to {
+    --hero-wave: 40px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-pattern {
+    animation: none;
+  }
 }
 
 /* ---------------------------------------------------------------------------

@@ -59,14 +59,13 @@ const spotlightIcons = [
 
 <!-- Hero: globe as the global visual anchor over the light Open Campus palette -->
 <section
-  class="relative grid min-h-[100svh] overflow-hidden md:grid-cols-[minmax(0,0.92fr)_minmax(360px,1.08fr)]"
-  style="background: linear-gradient(90deg, var(--color-paper) 0 47%, rgba(234,246,245,0.82) 47% 100%), radial-gradient(circle at 78% 34%, rgba(189,219,116,0.36), transparent 30%);"
+  class="hero-bg relative grid min-h-[100svh] overflow-hidden md:grid-cols-[minmax(0,0.92fr)_minmax(360px,1.08fr)]"
 >
   <div aria-hidden="true" class="hero-pattern pointer-events-none absolute inset-0 z-0"></div>
-  <div class="relative z-[4] flex min-h-[100svh] flex-col justify-center px-5 pt-32 pb-20 sm:px-8 lg:px-[72px]">
+  <div class="relative z-[4] flex min-w-0 min-h-[100svh] flex-col justify-center px-5 pt-28 pb-16 sm:px-8 sm:pt-32 sm:pb-20 lg:px-[72px]">
     <p class="mb-5 max-w-md text-[13px] font-extrabold tracking-wide text-teal">{t('hero.eyebrow')}</p>
     <h1
-      class="max-w-[14ch] text-6xl leading-[0.95] font-bold sm:text-7xl lg:text-[5rem]"
+      class="max-w-[14ch] text-[2.75rem] leading-[1.02] font-bold sm:text-7xl sm:leading-[0.95] lg:text-[5rem]"
       set:html={c.hero.title}
     ></h1>
     <p class="mt-6 max-w-md text-lg text-muted">{c.hero.subtitle}</p>
@@ -84,7 +83,7 @@ const spotlightIcons = [
 
   <a
     href="#upcoming"
-    class="hero-scroll absolute bottom-6 left-1/2 z-[5] flex -translate-x-1/2 flex-col items-center gap-1.5 text-ink/55 transition-colors hover:text-teal"
+    class="hero-scroll absolute bottom-6 left-1/2 z-[5] hidden -translate-x-1/2 flex-col items-center gap-1.5 text-ink/55 transition-colors hover:text-teal md:flex"
     aria-label={t('scroll.hint')}
   >
     <span class="tech-label text-[0.6rem]">{t('scroll.hint')}</span>
@@ -167,7 +166,7 @@ const spotlightIcons = [
   <span
     aria-hidden="true"
     class="pointer-events-none absolute -top-10 -right-6 font-display text-[26vw] leading-none font-bold text-ink/[0.04] select-none"
-    >NEXUS</span
+    >GOSIM</span
   >
 
   <div class="relative">
