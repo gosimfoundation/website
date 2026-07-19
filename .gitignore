@@ -10,7 +10,6 @@ node_modules/
 # environment variables
 .env
 .env.*
-!.env.example
 
 # macOS
 .DS_Store
