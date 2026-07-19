@@ -6,13 +6,18 @@ const t = useTranslations(lang);
 const home = localizedPath('/', lang);
 const year = new Date().getFullYear();
 
-// Footer nav mirrors the homepage sections.
-const footerLinks = [
-  { href: `${home}#about`, label: t('nav.about') },
-  { href: `${home}#pillars`, label: t('nav.pillars') },
-  { href: `${home}#events`, label: t('nav.events') },
-  { href: `${home}#spotlights`, label: t('nav.spotlights') },
-  { href: `${home}#newsletter`, label: t('nav.newsletter') },
+// Footer nav mirrors the homepage sections, split into two columns.
+const footerCols = [
+  [
+    { href: `${home}#about`, label: t('nav.about') },
+    { href: localizedPath('/founders', lang), label: t('nav.founders') },
+    { href: `${home}#pillars`, label: t('nav.pillars') },
+  ],
+  [
+    { href: `${home}#events`, label: t('nav.events') },
+    { href: `${home}#spotlights`, label: t('nav.spotlights') },
+    { href: `${home}#newsletter`, label: t('nav.newsletter') },
+  ],
 ];
 
 // Social profiles (icon path data ported from the GOSIM.org footer).
@@ -71,10 +76,20 @@ const socials = [
         </div>
       </div>
 
-      <!-- Section links -->
-      <nav class="grid grid-cols-2 gap-x-12 gap-y-3 text-sm sm:flex sm:flex-col sm:gap-2">
-        {footerLinks.map((l) => <a href={l.href} class="text-muted transition-colors hover:text-teal">{l.label}</a>)}
-      </nav>
+      <!-- Section links — two columns -->
+      <div class="flex gap-12 sm:gap-16 md:gap-20">
+        {
+          footerCols.map((col) => (
+            <nav class="flex flex-col gap-2 text-sm">
+              {col.map((l) => (
+                <a href={l.href} class="text-muted transition-colors hover:text-teal">
+                  {l.label}
+                </a>
+              ))}
+            </nav>
+          ))
+        }
+      </div>
     </div>
 
     <div class="mt-12 flex flex-col gap-2 border-t border-line pt-6 text-xs text-muted sm:flex-row sm:items-center sm:justify-between">

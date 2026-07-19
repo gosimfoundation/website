@@ -16,7 +16,7 @@ export const homeContent = {
     nextEvent: { label: 'Next event', cta: 'Visit event site', cfp: 'Call for proposals' },
     nexus: {
       eyebrow: '// About GOSIM',
-      heading: 'A global nexus for <span class="text-teal">open source</span>',
+      heading: 'A global nexus for <span class="text-teal">open-source</span>',
       paras: [
         'The global tech landscape is replete with innovation, and much of its foundation rests on the ethos of open-source collaboration. GOSIM stands at the forefront — a platform dedicated to nurturing the brightest grassroots open-source projects from inception to maturity.',
         'Born from the shared vision of a global community and run entirely by volunteers, GOSIM gives innovative projects a stage to shine, collaborate, and evolve. It’s not just a platform; it’s a movement. If a project is global, grassroots, and open-source, it has found its home at GOSIM.',

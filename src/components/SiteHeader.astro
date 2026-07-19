@@ -15,6 +15,7 @@ const home = localizedPath('/', lang);
 // Nav mirrors the homepage sections (anchor links so they work from any page).
 const links = [
   { href: `${home}#about`, label: t('nav.about') },
+  { href: localizedPath('/founders', lang), label: t('nav.founders') },
   { href: `${home}#pillars`, label: t('nav.pillars') },
   { href: `${home}#events`, label: t('nav.events') },
   { href: `${home}#spotlights`, label: t('nav.spotlights') },

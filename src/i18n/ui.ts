@@ -18,6 +18,7 @@ export type Lang = keyof typeof languages;
 export const ui = {
   en: {
     'nav.about': 'About',
+    'nav.founders': 'Founders',
     'nav.pillars': 'Pillars',
     'nav.stories': 'Stories',
     'nav.events': 'Events',
@@ -49,6 +50,7 @@ export const ui = {
   },
   zh: {
     'nav.about': '关于',
+    'nav.founders': '创始人',
     'nav.pillars': '支柱',
     'nav.stories': '文章',
     'nav.events': '活动',
