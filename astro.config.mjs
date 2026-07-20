@@ -6,9 +6,9 @@ import tailwindcss from '@tailwindcss/vite';
 
 // https://astro.build/config
 export default defineConfig({
-  // Served from a custom domain at the root, so base stays '/'.
-  // Update `site` (and public/CNAME) when the production domain changes.
-  site: 'https://testnew.gosim.org',
+  // Served from the apex custom domain at the root, so base stays '/'.
+  // `www.gosim.org` redirects here; keep `site` and public/CNAME in sync.
+  site: 'https://gosim.org',
   base: '/',
 
   // EN is the default (served at /), ZH at /zh/. Add 'fr' here when the
