@@ -48,6 +48,13 @@ export const homeContent = {
       description:
         'GOSIM conferences and workshops across Paris, Hangzhou, Shenzhen, and beyond — each with its own program, talks, and stories.',
     },
+    stories: {
+      eyebrow: '// Latest stories',
+      heading: 'Notes from the community',
+      description:
+        'Recaps, interviews, and project spotlights — the writing that turns a week of talks into something you can come back to.',
+      cta: 'All stories',
+    },
     spotlights: {
       eyebrow: '// Spotlights',
       heading: 'Inspiring the future through open creation',
@@ -103,6 +110,12 @@ export const homeContent = {
       eyebrow: '// 往届活动',
       heading: '大会与工作坊',
       description: 'GOSIM 大会与工作坊遍及巴黎、杭州、深圳等地——每一场都有各自的议程、演讲与故事。',
+    },
+    stories: {
+      eyebrow: '// 最新文章',
+      heading: '来自社区的记录',
+      description: '回顾、访谈与项目聚焦——这些文字让为期一周的分享沉淀为可以随时回看的内容。',
+      cta: '全部文章',
     },
     spotlights: {
       eyebrow: '// 聚焦',

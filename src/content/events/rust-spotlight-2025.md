@@ -4,7 +4,7 @@ description: "A program dedicated to celebrating the brilliance and creativity o
 date: 2025-05-13
 dateLabel: "May 13–17, 2025"
 location: "Utrecht, The Netherlands"
-image: "/events/utrecht.jpg"
+image: "../../assets/events/utrecht.jpg"
 url: "https://spotlight.gosim.org/utrecht2025"
 status: "past"
 lang: en

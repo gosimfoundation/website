@@ -41,6 +41,9 @@
   --font-mono: ui-monospace, "SF Mono", "SFMono-Regular", Menlo, "Cascadia Mono", monospace;
 
   --color-ink: #10242a;
+  /* Ink lifted 8% toward mist — for dark panels that should sit a step above
+     the near-black sections rather than matching them. 12.5:1 on paper text. */
+  --color-ink-soft: #21353a;
   --color-muted: #5a6c70;
   --color-paper: #fbfcf8;
   --color-mist: #eaf6f5;
@@ -88,6 +91,14 @@
   font-size: 0.72rem;
   letter-spacing: 0.22em;
   text-transform: uppercase;
+}
+
+/* CJK glyphs are already full-width, so the Latin tracking above reads as
+   broken-apart text (「全 部 文 章」). Ease it off, and bump the size since
+   Chinese characters need more room than 0.72rem Latin caps. */
+:lang(zh) .tech-label {
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
 }
 
 /* Teal→coral gradient fill for an accented brand phrase (e.g. the hero title). */

@@ -16,7 +16,7 @@ const langEnum = z.enum(['en', 'zh', 'fr']);
 
 const blog = defineCollection({
   loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/blog' }),
-  schema: () =>
+  schema: ({ image }) =>
     z.object({
       title: z.string(),
       description: z.string(),
@@ -25,31 +25,39 @@ const blog = defineCollection({
       author: z.string().default('GOSIM Editorial Team'),
       tags: z.array(z.string()).default([]),
       draft: z.boolean().default(false),
+      // Optional cover, as a path relative to this Markdown file (same
+      // convention as events). Posts without one fall back to a typographic
+      // header, so this never has to be filled in.
+      image: image().optional(),
+      imageAlt: z.string().optional(),
     }),
 });
 
 const events = defineCollection({
   loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/events' }),
-  schema: z.object({
-    title: z.string(),
-    description: z.string(),
-    date: z.coerce.date(),
-    // Human-readable date/range shown in the UI (e.g. "May 5–6, 2026").
-    // Falls back to a formatted `date` when omitted.
-    dateLabel: z.string().optional(),
-    location: z.string().optional(),
-    // Card background image (path under /public), e.g. "/events/paris.png".
-    image: z.string().optional(),
-    // External event website. When set, event links open this in a new tab
-    // instead of an internal details page.
-    url: z.string().url().optional(),
-    // Call-for-Proposals link — shown as a CTA on the upcoming-event banner.
-    cfp: z.string().url().optional(),
-    // Localized (Chinese) event website; used on /zh, falls back to `url`.
-    urlZh: z.string().url().optional(),
-    status: z.enum(['upcoming', 'past', 'draft']).default('upcoming'),
-    lang: langEnum.default('en'),
-  }),
+  schema: ({ image }) =>
+    z.object({
+      title: z.string(),
+      description: z.string(),
+      date: z.coerce.date(),
+      // Human-readable date/range shown in the UI (e.g. "May 5–6, 2026").
+      // Falls back to a formatted `date` when omitted.
+      dateLabel: z.string().optional(),
+      location: z.string().optional(),
+      // Card background image — a path *relative to this Markdown file* into
+      // src/assets, e.g. "../../assets/events/paris.png". The image() helper
+      // resolves it to ImageMetadata so <Image> can emit optimized WebP.
+      image: image().optional(),
+      // External event website. When set, event links open this in a new tab
+      // instead of an internal details page.
+      url: z.string().url().optional(),
+      // Call-for-Proposals link — shown as a CTA on the upcoming-event banner.
+      cfp: z.string().url().optional(),
+      // Localized (Chinese) event website; used on /zh, falls back to `url`.
+      urlZh: z.string().url().optional(),
+      status: z.enum(['upcoming', 'past', 'draft']).default('upcoming'),
+      lang: langEnum.default('en'),
+    }),
 });
 
 const projects = defineCollection({

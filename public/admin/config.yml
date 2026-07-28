@@ -20,6 +20,10 @@ collections:
     folder: "src/content/blog/en"
     create: true
     slug: "{{slug}}"
+    # Uploads land in src/assets/blog and are written as a path relative to the
+    # Markdown file, which is what content.config.ts's image() helper expects.
+    media_folder: "../../../assets/blog"
+    public_folder: "../../../assets/blog"
     fields:
       - { label: "Title", name: "title", widget: "string" }
       - { label: "Description", name: "description", widget: "text" }
@@ -27,6 +31,8 @@ collections:
       - { label: "Language", name: "lang", widget: "hidden", default: "en" }
       - { label: "Author", name: "author", widget: "string", default: "GOSIM Editorial Team" }
       - { label: "Tags", name: "tags", widget: "list", default: [], required: false }
+      - { label: "Cover image", name: "image", widget: "image", required: false, hint: "Optional. Shown at the top of the article and behind the featured card on /blog" }
+      - { label: "Cover alt text", name: "imageAlt", widget: "string", required: false, hint: "Describes the cover for screen readers" }
       - { label: "Draft", name: "draft", widget: "boolean", default: false, required: false }
       - { label: "Body", name: "body", widget: "markdown" }
 
@@ -35,6 +41,8 @@ collections:
     folder: "src/content/blog/zh"
     create: true
     slug: "{{slug}}"
+    media_folder: "../../../assets/blog"
+    public_folder: "../../../assets/blog"
     fields:
       - { label: "标题", name: "title", widget: "string" }
       - { label: "摘要", name: "description", widget: "text" }
@@ -42,6 +50,8 @@ collections:
       - { label: "Language", name: "lang", widget: "hidden", default: "zh" }
       - { label: "作者", name: "author", widget: "string", default: "GOSIM 编辑团队" }
       - { label: "标签", name: "tags", widget: "list", default: [], required: false }
+      - { label: "封面图", name: "image", widget: "image", required: false, hint: "可选。显示在文章顶部，以及 /blog 特色卡片的背景" }
+      - { label: "封面替代文字", name: "imageAlt", widget: "string", required: false, hint: "供屏幕阅读器使用的图片描述" }
       - { label: "草稿", name: "draft", widget: "boolean", default: false, required: false }
       - { label: "正文", name: "body", widget: "markdown" }
 
@@ -50,12 +60,17 @@ collections:
     folder: "src/content/events"
     create: true
     slug: "{{slug}}"
+    media_folder: "../../assets/events"
+    public_folder: "../../assets/events"
     fields:
       - { label: "Title", name: "title", widget: "string" }
       - { label: "Description", name: "description", widget: "text" }
       - { label: "Date", name: "date", widget: "datetime" }
       - { label: "Date label", name: "dateLabel", widget: "string", required: false, hint: "Shown in the UI, e.g. 'May 5–6, 2026'" }
       - { label: "Location", name: "location", widget: "string", required: false }
+      # Uploads land in src/assets/events and are written into frontmatter as a
+      # path relative to the Markdown file, which is what content.config.ts's
+      # image() helper expects. Keep both folders in sync if either moves.
       - { label: "Card image", name: "image", widget: "image", required: false, hint: "Event/city photo shown as the card background" }
       - { label: "Website URL", name: "url", widget: "string", required: false, hint: "External event site; the archive links here in a new tab" }
       - { label: "Call for Proposals URL", name: "cfp", widget: "string", required: false, hint: "CFP link; shown as a button on the upcoming-event banner" }

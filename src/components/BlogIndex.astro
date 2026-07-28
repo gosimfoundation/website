@@ -1,35 +1,131 @@
 ---
 import { getCollection } from 'astro:content';
+import { Image } from 'astro:assets';
 import ArticleCard from './ArticleCard.astro';
-import { getLangFromUrl, useTranslations, localizedPath } from '../i18n/utils';
+import { getLangFromUrl, useTranslations, localizedPath, readingMinutes } from '../i18n/utils';
+import { homeContent } from '../i18n/home';
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
+// Section copy is shared with the homepage "Latest stories" block so the two
+// never drift apart.
+const c = homeContent[lang as keyof typeof homeContent] ?? homeContent.en;
 
 const posts = (await getCollection('blog', ({ data }) => data.lang === lang && !data.draft)).sort(
   (a, b) => b.data.date.getTime() - a.data.date.getTime()
 );
+
+const [featured, ...rest] = posts;
+
+const dateFmt = new Intl.DateTimeFormat(lang === 'zh' ? 'zh-CN' : 'en-US', {
+  dateStyle: 'medium',
+  timeZone: 'UTC',
+});
+const readLabel = (body: string) => t('blog.readTime').replace('{n}', String(readingMinutes(body)));
+const postPath = (id: string) => localizedPath(`/blog/${id.split('/').pop()}`, lang);
 ---
 
-<section class="mx-auto max-w-4xl px-5 pt-36 pb-24 sm:px-8">
-  <p class="text-xs font-semibold tracking-wide text-teal uppercase">{t('hero.eyebrow')}</p>
-  <h1 class="mt-2 text-5xl leading-[1.02] font-bold sm:text-6xl">{t('section.latest')}</h1>
-
-  <div class="mt-10">
-    {
-      posts.length === 0 ? (
-        <p class="border-t border-line py-6 text-muted">No stories yet.</p>
-      ) : (
-        posts.map((post) => (
-          <ArticleCard
-            href={localizedPath(`/blog/${post.id.split('/').pop()}`, lang)}
-            eyebrow={post.data.tags[0]}
-            title={post.data.title}
-            description={post.data.description}
-            date={post.data.date}
-          />
-        ))
-      )
-    }
+<!-- Header -->
+<section class="relative overflow-hidden px-5 pt-36 pb-12 sm:px-8 md:pt-40 lg:px-[72px]">
+  <span
+    aria-hidden="true"
+    class="pointer-events-none absolute -top-8 -right-6 font-display text-[24vw] leading-none font-bold text-ink/[0.04] select-none"
+    >GOSIM</span
+  >
+  <div class="relative reveal">
+    <p class="tech-label text-coral">{c.stories.eyebrow}</p>
+    <h1 class="mt-4 text-5xl leading-[1.0] font-bold tracking-tight sm:text-6xl lg:text-[4.5rem]">
+      {c.stories.heading}
+    </h1>
+    <p class="mt-6 max-w-xl text-lg leading-relaxed text-muted">{c.stories.description}</p>
   </div>
+</section>
+
+<section class="px-5 pb-28 sm:px-8 lg:px-[72px]">
+  {
+    !featured ? (
+      <p class="border-t border-line py-8 text-muted">{t('blog.empty')}</p>
+    ) : (
+      <>
+        {/* Featured — newest post, styled like the upcoming-event banner so the
+            two "hero" blocks on the site share a language. Works with or
+            without a cover image. */}
+        <a
+          href={postPath(featured.id)}
+          class="group grain reveal relative block overflow-hidden rounded-3xl bg-ink-soft text-paper"
+        >
+          {featured.data.image && (
+            <Image
+              src={featured.data.image}
+              alt=""
+              loading="eager"
+              widths={[400, 640, 960, 1280]}
+              sizes="(max-width: 767px) 100vw, 60vw"
+              format="webp"
+              quality={72}
+              class="pointer-events-none absolute inset-y-0 right-0 hidden h-full w-3/5 object-cover opacity-90 transition-transform duration-[600ms] group-hover:scale-105 md:block"
+              style="mask-image: linear-gradient(90deg, transparent, #000 42%); -webkit-mask-image: linear-gradient(90deg, transparent, #000 42%);"
+            />
+          )}
+          <div
+            aria-hidden="true"
+            class="pointer-events-none absolute -top-24 -right-16 h-72 w-72 rounded-full bg-coral/30 blur-[110px]"
+          />
+          <div
+            aria-hidden="true"
+            class="pointer-events-none absolute -bottom-28 -left-20 h-72 w-72 rounded-full bg-teal/20 blur-[120px]"
+          />
+
+          <div class="relative z-[1] max-w-3xl p-8 sm:p-12 md:p-16">
+            <p class="tech-label flex flex-wrap items-center gap-x-3 gap-y-1 text-paper/60">
+              {featured.data.tags[0] && (
+                <span class="rounded-full bg-lime px-3 py-1 text-ink">{featured.data.tags[0]}</span>
+              )}
+              <span>{dateFmt.format(featured.data.date)}</span>
+              <span aria-hidden="true">·</span>
+              <span>{readLabel(featured.body ?? '')}</span>
+            </p>
+            <h2 class="mt-6 text-3xl leading-[1.05] font-bold tracking-tight sm:text-4xl md:text-5xl">
+              {featured.data.title}
+            </h2>
+            <p class="mt-5 max-w-2xl text-lg leading-relaxed text-paper/70">
+              {featured.data.description}
+            </p>
+            <span class="tech-label mt-8 inline-flex items-center gap-2 rounded-full bg-lime px-6 py-3 text-ink transition-all group-hover:gap-3">
+              {t('blog.read')}
+              <svg
+                class="h-4 w-4"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+            </span>
+          </div>
+        </a>
+
+        {rest.length > 0 && (
+          <div class="mt-16">
+            {rest.map((post, i) => (
+              <div class="reveal" style={`--reveal-delay: ${Math.min(i, 6) * 60}ms`}>
+                <ArticleCard
+                  href={postPath(post.id)}
+                  eyebrow={post.data.tags[0]}
+                  title={post.data.title}
+                  description={post.data.description}
+                  date={post.data.date}
+                  readTime={readLabel(post.body ?? '')}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+      </>
+    )
+  }
 </section>

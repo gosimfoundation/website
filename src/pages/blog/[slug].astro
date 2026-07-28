@@ -6,16 +6,19 @@ import Article from '../../components/Article.astro';
 // English articles at /blog/<slug>. The collection id is "en/<slug>"; the
 // route slug is just the filename.
 export async function getStaticPaths() {
-  const posts = await getCollection('blog', ({ data }) => data.lang === 'en');
-  return posts.map((post) => ({
+  const posts = (await getCollection('blog', ({ data }) => data.lang === 'en' && !data.draft)).sort(
+    (a, b) => b.data.date.getTime() - a.data.date.getTime()
+  );
+  // `next` is the next post to read — i.e. the following, older one.
+  return posts.map((post, i) => ({
     params: { slug: post.id.split('/').pop() },
-    props: { post },
+    props: { post, next: posts[i + 1] },
   }));
 }
 
-const { post } = Astro.props;
+const { post, next } = Astro.props;
 ---
 
 <BaseLayout title={post.data.title} description={post.data.description}>
-  <Article post={post} />
+  <Article post={post} next={next} />
 </BaseLayout>

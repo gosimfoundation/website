@@ -4,7 +4,7 @@ description: "Championing and enhancing open-source contribution across five dev
 date: 2023-09-23
 dateLabel: "September 23–24, 2023"
 location: "Shanghai, China"
-image: "/events/shanghai.png"
+image: "../../assets/events/shanghai.png"
 url: "https://workshop2023.gosim.org/"
 status: "past"
 lang: en

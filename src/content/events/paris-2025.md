@@ -4,7 +4,7 @@ description: "A confluence of minds from across the open-source domain — a dee
 date: 2025-05-06
 dateLabel: "May 6–7, 2025"
 location: "Paris, France"
-image: "/events/paris.png"
+image: "../../assets/events/paris.png"
 url: "https://paris2025.gosim.org/"
 status: "past"
 lang: en

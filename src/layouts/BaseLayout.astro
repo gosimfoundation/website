@@ -41,6 +41,31 @@ const lang = getLangFromUrl(Astro.url);
       onScroll();
       window.addEventListener('scroll', onScroll, { passive: true });
     </script>
+
+    <script>
+      // Staggered scroll reveals (progressive enhancement; CSS handles
+      // reduced-motion / no-JS). Lives in the layout, not a single page:
+      // `.reveal` is a global style, so anything without this observer
+      // running would stay stuck at opacity 0.
+      const els = document.querySelectorAll('.reveal');
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (!reduce && 'IntersectionObserver' in window) {
+        const io = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              if (entry.isIntersecting) {
+                entry.target.classList.add('is-in');
+                io.unobserve(entry.target);
+              }
+            }
+          },
+          { rootMargin: '0px 0px -10% 0px', threshold: 0.12 }
+        );
+        els.forEach((el) => io.observe(el));
+      } else {
+        els.forEach((el) => el.classList.add('is-in'));
+      }
+    </script>
   </body>
 </html>
 

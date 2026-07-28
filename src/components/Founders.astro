@@ -1,4 +1,5 @@
 ---
+import { Image } from 'astro:assets';
 import { getLangFromUrl } from '../i18n/utils';
 import { founders, foundersPage } from '../i18n/founders';
 
@@ -38,10 +39,14 @@ const page = foundersPage[lang as keyof typeof foundersPage] ?? foundersPage.en;
                 style={`background: ${f.accent}; opacity: 0.16`}
                 aria-hidden="true"
               />
-              <img
+              <Image
                 src={f.image}
                 alt={fc.name}
                 loading="lazy"
+                widths={[288, 576]}
+                sizes="(min-width: 768px) 18rem, 20rem"
+                format="webp"
+                quality={80}
                 class="relative aspect-square w-full rounded-3xl object-cover shadow-[0_20px_50px_-24px_rgba(16,36,42,0.45)]"
               />
             </div>

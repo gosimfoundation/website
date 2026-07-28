@@ -1,63 +1,234 @@
 ---
 import { render, type CollectionEntry } from 'astro:content';
+import { Image } from 'astro:assets';
+import { getLangFromUrl, useTranslations, localizedPath, readingMinutes } from '../i18n/utils';
 
 interface Props {
   post: CollectionEntry<'blog'>;
+  /** Next post in the same locale, for the footer pager. */
+  next?: CollectionEntry<'blog'>;
 }
-const { post } = Astro.props;
+const { post, next } = Astro.props;
 const { Content } = await render(post);
-const dateLabel = new Intl.DateTimeFormat(post.data.lang === 'zh' ? 'zh-CN' : 'en-US', {
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const blogPath = localizedPath('/blog', lang);
+const postPath = (id: string) => localizedPath(`/blog/${id.split('/').pop()}`, lang);
+
+const dateLabel = new Intl.DateTimeFormat(lang === 'zh' ? 'zh-CN' : 'en-US', {
   dateStyle: 'long',
+  timeZone: 'UTC',
 }).format(post.data.date);
+const readLabel = t('blog.readTime').replace('{n}', String(readingMinutes(post.body ?? '')));
 ---
 
-<article class="mx-auto max-w-2xl px-5 pt-36 pb-24 sm:px-8">
-  <p class="text-xs font-semibold tracking-wide text-teal uppercase">{post.data.author}</p>
-  <h1 class="mt-3 text-4xl leading-tight font-bold sm:text-5xl">{post.data.title}</h1>
-  <p class="mt-4 text-muted">{dateLabel}</p>
-  <div class="article-body mt-10">
-    <Content />
+<article>
+  <!-- Header -->
+  <header class="relative overflow-hidden px-5 pt-36 pb-4 sm:px-8 md:pt-40 lg:px-[72px]">
+    <span
+      aria-hidden="true"
+      class="pointer-events-none absolute -top-8 -right-6 font-display text-[22vw] leading-none font-bold text-ink/[0.035] select-none"
+      >GOSIM</span
+    >
+
+    <div class="relative mx-auto max-w-3xl">
+      <a
+        href={blogPath}
+        class="tech-label group inline-flex items-center gap-2 text-muted transition-colors hover:text-teal"
+      >
+        <svg
+          class="h-4 w-4 transition-transform group-hover:-translate-x-0.5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M19 12H5M11 18l-6-6 6-6"></path>
+        </svg>
+        {t('blog.back')}
+      </a>
+
+      {post.data.tags[0] && <p class="tech-label mt-8 text-coral">{`// ${post.data.tags[0]}`}</p>}
+
+      {/* Solid ink rather than .brand-gradient: across a 3-line headline the
+          teal→coral ramp turns muddy brown through the middle. The accent
+          instead lives in the coral tag above and the h2 rules below. */}
+      <h1 class="mt-4 text-4xl leading-[1.05] font-bold tracking-tight sm:text-5xl lg:text-[3.5rem]">
+        {post.data.title}
+      </h1>
+
+      <p class="tech-label mt-7 flex flex-wrap items-center gap-x-3 gap-y-1 text-muted">
+        <span>{post.data.author}</span>
+        <span aria-hidden="true">·</span>
+        <span>{dateLabel}</span>
+        <span aria-hidden="true">·</span>
+        <span>{readLabel}</span>
+      </p>
+    </div>
+  </header>
+
+  {
+    post.data.image && (
+      <div class="px-5 sm:px-8 lg:px-[72px]">
+        <div class="mx-auto mt-10 max-w-4xl">
+          <Image
+            src={post.data.image}
+            alt={post.data.imageAlt ?? ''}
+            loading="eager"
+            widths={[640, 960, 1280]}
+            sizes="(max-width: 1023px) 100vw, 56rem"
+            format="webp"
+            quality={78}
+            class="aspect-[16/9] w-full rounded-2xl object-cover"
+          />
+        </div>
+      </div>
+    )
+  }
+
+  <!-- Body -->
+  <div class="px-5 pb-16 sm:px-8 lg:px-[72px]">
+    <div class="article-body mx-auto mt-10 max-w-3xl border-t border-line pt-10">
+      <Content />
+    </div>
   </div>
+
+  <!-- Pager -->
+  <nav class="px-5 pb-28 sm:px-8 lg:px-[72px]" aria-label={t('section.latest')}>
+    <div class="mx-auto grid max-w-3xl items-start gap-6 border-t border-line pt-8 sm:grid-cols-2">
+      <a
+        href={blogPath}
+        class="tech-label group inline-flex items-center gap-2 text-muted transition-colors hover:text-teal"
+      >
+        <svg
+          class="h-4 w-4 transition-transform group-hover:-translate-x-0.5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M19 12H5M11 18l-6-6 6-6"></path>
+        </svg>
+        {t('blog.back')}
+      </a>
+
+      {
+        next && (
+          <a href={postPath(next.id)} class="group sm:text-right">
+            <span class="tech-label text-muted">{t('blog.next')}</span>
+            <span class="mt-1.5 block text-lg leading-snug font-semibold transition-colors group-hover:text-teal">
+              {next.data.title}
+            </span>
+          </a>
+        )
+      }
+    </div>
+  </nav>
 </article>
 
 <style>
   .article-body :global(p) {
-    margin: 1.25rem 0;
-    line-height: 1.75;
+    margin: 1.4rem 0;
+    font-size: 1.0625rem;
+    line-height: 1.8;
     color: var(--color-ink);
   }
+  /* Lead paragraph — sets the article's opening tone. */
+  .article-body :global(> p:first-child) {
+    font-size: 1.2rem;
+    line-height: 1.7;
+    color: var(--color-muted);
+  }
   .article-body :global(h2) {
-    margin: 2.5rem 0 1rem;
-    font-size: 1.75rem;
+    margin: 3rem 0 1rem;
+    font-family: var(--font-display);
+    font-size: 1.9rem;
     font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  /* Short coral rule above each section heading, echoing the tech-labels. */
+  .article-body :global(h2)::before {
+    content: '';
+    display: block;
+    width: 2.5rem;
+    height: 2px;
+    margin-bottom: 1.1rem;
+    background: var(--color-coral);
   }
   .article-body :global(h3) {
-    margin: 2rem 0 0.75rem;
-    font-size: 1.35rem;
+    margin: 2.25rem 0 0.75rem;
+    font-family: var(--font-display);
+    font-size: 1.4rem;
     font-weight: 600;
   }
   .article-body :global(a) {
     color: var(--color-teal);
     text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1px;
+    transition: color 200ms ease;
+  }
+  .article-body :global(a:hover) {
+    color: var(--color-coral);
   }
   .article-body :global(ul),
   .article-body :global(ol) {
-    margin: 1.25rem 0;
-    padding-left: 1.5rem;
-    line-height: 1.75;
+    margin: 1.4rem 0;
+    padding-left: 1.25rem;
+    font-size: 1.0625rem;
+    line-height: 1.8;
   }
   .article-body :global(li) {
-    margin: 0.4rem 0;
+    margin: 0.6rem 0;
+    padding-left: 0.35rem;
+  }
+  .article-body :global(li)::marker {
+    color: var(--color-teal);
+  }
+  .article-body :global(strong) {
+    font-weight: 600;
   }
   .article-body :global(blockquote) {
-    margin: 1.5rem 0;
-    border-left: 3px solid var(--color-teal);
-    padding-left: 1rem;
+    margin: 2rem 0;
+    border-left: 3px solid var(--color-coral);
+    padding: 0.25rem 0 0.25rem 1.25rem;
+    font-size: 1.15rem;
+    line-height: 1.7;
     color: var(--color-muted);
-    font-style: italic;
+  }
+  .article-body :global(code) {
+    font-family: var(--font-mono);
+    font-size: 0.875em;
+    background: var(--color-mist);
+    border-radius: 0.3rem;
+    padding: 0.15em 0.4em;
+  }
+  .article-body :global(pre) {
+    margin: 1.75rem 0;
+    overflow-x: auto;
+    border-radius: 0.75rem;
+    background: var(--color-ink);
+    padding: 1.25rem;
+  }
+  .article-body :global(pre code) {
+    background: none;
+    padding: 0;
+    color: var(--color-paper);
+  }
+  .article-body :global(hr) {
+    margin: 2.5rem 0;
+    border: 0;
+    border-top: 1px solid var(--color-line);
   }
   .article-body :global(img) {
     border-radius: 0.75rem;
-    margin: 1.5rem 0;
+    margin: 2rem 0;
   }
 </style>

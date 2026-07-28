@@ -4,7 +4,7 @@ description: "A confluence of minds from across the open-source domain — a dee
 date: 2024-10-17
 dateLabel: "October 17–18, 2024"
 location: "Beijing, China"
-image: "/events/beijing.png"
+image: "../../assets/events/beijing.png"
 url: "https://china2024.gosim.org/"
 status: "past"
 lang: en

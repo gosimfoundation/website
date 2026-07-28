@@ -4,7 +4,7 @@ description: "A program dedicated to celebrating the brilliance and creativity o
 date: 2025-05-06
 dateLabel: "May 6–7, 2025"
 location: "Paris, France"
-image: "/events/paris.png"
+image: "../../assets/events/paris.png"
 url: "https://spotlight.gosim.org/paris2025"
 status: "past"
 lang: en

@@ -4,7 +4,7 @@ description: "Network with industry experts, collaborate with fellow open-source
 date: 2023-09-26
 dateLabel: "September 26, 2023"
 location: "Shanghai, China"
-image: "/events/shanghai.png"
+image: "../../assets/events/shanghai.png"
 url: "https://conference2023.gosim.org/"
 status: "past"
 lang: en

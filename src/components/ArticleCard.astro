@@ -7,17 +7,50 @@ interface Props {
   title: string;
   description?: string;
   date?: Date;
+  readTime?: string;
 }
-const { href, eyebrow, title, description, date } = Astro.props;
+const { href, eyebrow, title, description, date, readTime } = Astro.props;
 const lang = getLangFromUrl(Astro.url);
 const dateLabel = date
-  ? new Intl.DateTimeFormat(lang === 'zh' ? 'zh-CN' : 'en-US', { dateStyle: 'medium' }).format(date)
+  ? new Intl.DateTimeFormat(lang === 'zh' ? 'zh-CN' : 'en-US', {
+      dateStyle: 'medium',
+      timeZone: 'UTC',
+    }).format(date)
   : undefined;
 ---
 
-<a href={href} class="group block border-t border-line py-6 transition-colors hover:border-ink">
-  {eyebrow && <p class="text-xs font-semibold tracking-wide text-teal uppercase">{eyebrow}</p>}
-  <h3 class="mt-2 text-2xl leading-tight font-semibold group-hover:text-teal">{title}</h3>
-  {description && <p class="mt-2 max-w-prose text-muted">{description}</p>}
-  {dateLabel && <p class="mt-3 text-xs text-muted">{dateLabel}</p>}
+<a
+  href={href}
+  class="group grid grid-cols-[1fr_auto] items-start gap-x-6 border-t border-line py-7 transition-colors hover:border-ink"
+>
+  <div class="min-w-0">
+    {
+      (eyebrow || dateLabel) && (
+        <p class="tech-label flex flex-wrap items-center gap-x-3 gap-y-1 text-muted">
+          {eyebrow && <span class="text-coral">{eyebrow}</span>}
+          {eyebrow && dateLabel && <span aria-hidden="true">·</span>}
+          {dateLabel && <span>{dateLabel}</span>}
+          {readTime && <span aria-hidden="true">·</span>}
+          {readTime && <span>{readTime}</span>}
+        </p>
+      )
+    }
+    <h3 class="mt-3 text-2xl leading-tight font-semibold transition-colors group-hover:text-teal sm:text-[1.75rem]">
+      {title}
+    </h3>
+    {description && <p class="mt-2.5 max-w-2xl leading-relaxed text-muted">{description}</p>}
+  </div>
+
+  <svg
+    class="mt-1 h-5 w-5 shrink-0 text-muted transition-all duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-teal"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M7 17 17 7M9 7h8v8"></path>
+  </svg>
 </a>

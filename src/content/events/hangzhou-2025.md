@@ -4,7 +4,7 @@ description: "A confluence of minds from across the open-source domain — a dee
 date: 2025-09-13
 dateLabel: "September 13–14, 2025"
 location: "Hangzhou, China"
-image: "/events/hangzhou.png"
+image: "../../assets/events/hangzhou.png"
 url: "https://hangzhou2025.gosim.org/"
 status: "past"
 lang: en

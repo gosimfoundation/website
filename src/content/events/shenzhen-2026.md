@@ -4,7 +4,7 @@ description: "A premier open-source technology conference in Shenzhen — open-s
 date: 2026-10-16
 dateLabel: "October 16–17, 2026"
 location: "Shenzhen, China"
-image: "/events/shenzhen-tower.jpg"
+image: "../../assets/events/shenzhen-tower.jpg"
 url: "https://shenzhen2026.gosim.org/"
 cfp: "https://cfp.gosim.org"
 urlZh: "https://shenzhen2026.gosim.org/zh/"

@@ -25,6 +25,8 @@ pnpm-debug.log*
 .idea/
 
 # local design/QA working files (kept out of the site repo)
-/*.png
+# temp/ is the scratch folder for generated screenshots and design comparisons.
+temp/
+# Written automatically by the Playwright tooling (page snapshots, console logs).
 .playwright-mcp/
 .playwright-cli/

@@ -1,18 +1,21 @@
 ---
 import { getCollection } from 'astro:content';
+import { Image } from 'astro:assets';
 import Globe from './Globe.astro';
-import { getLangFromUrl, useTranslations, localizedPath } from '../i18n/utils';
+import ArticleCard from './ArticleCard.astro';
+import { getLangFromUrl, useTranslations, localizedPath, readingMinutes } from '../i18n/utils';
 import { homeContent } from '../i18n/home';
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 const c = homeContent[lang as keyof typeof homeContent] ?? homeContent.en;
 
-// Stories/blog section is hidden from the homepage for now. To restore it,
-// un-comment this query and re-add a "Latest stories" section in the template.
-// const posts = (await getCollection('blog', ({ data }) => data.lang === lang && !data.draft))
-//   .sort((a, b) => b.data.date.getTime() - a.data.date.getTime())
-//   .slice(0, 4);
+// Latest stories. Unlike events, blog posts do *not* fall back to English on
+// /zh — a Chinese reader is better served by an empty list than by an English
+// article they can't read.
+const posts = (await getCollection('blog', ({ data }) => data.lang === lang && !data.draft))
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime())
+  .slice(0, 3);
 
 let events = (await getCollection('events', ({ data }) => data.lang === lang)).sort(
   (a, b) => b.data.date.getTime() - a.data.date.getTime()
@@ -27,7 +30,12 @@ if (events.length === 0) {
 const upcomingEvents = events.filter((e) => e.data.status === 'upcoming');
 const pastEvents = events.filter((e) => e.data.status !== 'upcoming');
 
-const dateFmt = new Intl.DateTimeFormat(lang === 'zh' ? 'zh-CN' : 'en-US', { dateStyle: 'medium' });
+// timeZone: 'UTC' — frontmatter dates parse as UTC midnight, so formatting in
+// the viewer's local zone would render the previous day west of Greenwich.
+const dateFmt = new Intl.DateTimeFormat(lang === 'zh' ? 'zh-CN' : 'en-US', {
+  dateStyle: 'medium',
+  timeZone: 'UTC',
+});
 
 // Bento spans for the past-events mosaic. 9 items tile perfectly into 4 cols
 // (index 0 is a large 2×2 feature; several 2×1 wides). Extra items fall back to
@@ -43,6 +51,14 @@ const bentoSpans = [
   'lg:col-span-2',
   'lg:col-span-2',
 ];
+
+// The grid is 1 column, then 2 (sm), then 4 (lg) — where a card covers either
+// 1 or 2 of those 4. Narrow cards need their own `sizes` hint, or the browser
+// fetches a 2×-too-large variant for them.
+const cardSizes = (i: number) =>
+  bentoSpans[i]?.includes('col-span-2')
+    ? '(min-width: 640px) 50vw, 100vw'
+    : '(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw';
 
 // Brand accents cycled across the bold sections.
 const accents = ['var(--color-teal)', 'var(--color-coral)', 'var(--color-lime)'];
@@ -93,8 +109,6 @@ const spotlightIcons = [
   </a>
 </section>
 
-{/* Latest stories — hidden for now (restore the posts query above with a section here). */}
-
 <!-- Next event — highlighted right after the hero -->
 {
   upcomingEvents.length > 0 && (
@@ -102,10 +116,16 @@ const spotlightIcons = [
       {upcomingEvents.map((ev) => (
         <div class="event-frame grain reveal relative overflow-hidden rounded-3xl bg-ink text-paper">
           {ev.data.image && (
-            <img
+            <Image
               src={ev.data.image}
               alt=""
               loading="lazy"
+              widths={[400, 640, 960, 1280]}
+              /* Hidden below md, but still fetched — the 1px hint plus a small
+                 400w candidate keeps that wasted fetch tiny. 60vw above md. */
+              sizes="(max-width: 767px) 1px, 60vw"
+              format="webp"
+              quality={72}
               class="pointer-events-none absolute inset-y-0 right-0 hidden h-full w-3/5 object-cover opacity-90 md:block"
               style="mask-image: linear-gradient(90deg, transparent, #000 42%); -webkit-mask-image: linear-gradient(90deg, transparent, #000 42%);"
             />
@@ -267,10 +287,14 @@ const spotlightIcons = [
               style={`--reveal-delay: ${Math.min(i, 6) * 50}ms`}
             >
               {ev.data.image && (
-                <img
+                <Image
                   src={ev.data.image}
                   alt=""
                   loading="lazy"
+                  widths={[400, 640, 960]}
+                  sizes={cardSizes(i)}
+                  format="webp"
+                  quality={72}
                   class="absolute inset-0 h-full w-full object-cover opacity-85 transition-transform duration-[600ms] group-hover:scale-105"
                 />
               )}
@@ -303,6 +327,49 @@ const spotlightIcons = [
     }
   </div>
 </section>
+
+<!-- Latest stories — three most recent posts; the full archive lives at /blog.
+     Hidden entirely when a locale has no posts, rather than showing an empty
+     shell on the homepage. -->
+{
+  posts.length > 0 && (
+    <section id="stories" class="scroll-mt-24 bg-paper">
+      <div class="px-5 py-16 sm:px-8 md:py-20 lg:px-[72px]">
+        <div class="grid gap-12 md:grid-cols-[0.9fr_1.1fr] md:gap-16">
+          <div class="reveal">
+            <p class="tech-label text-coral">{c.stories.eyebrow}</p>
+            <h2 class="mt-4 text-4xl leading-[1.0] font-bold tracking-tight sm:text-5xl md:text-6xl">
+              {c.stories.heading}
+            </h2>
+            <p class="mt-6 max-w-md text-lg leading-relaxed text-muted">{c.stories.description}</p>
+            <a
+              href={localizedPath('/blog', lang)}
+              class="tech-label mt-8 inline-flex items-center gap-2 rounded-full bg-lime px-6 py-3 text-ink transition-all hover:gap-3"
+            >
+              {c.stories.cta}
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+            </a>
+          </div>
+
+          <div class="reveal self-center" style="--reveal-delay: 120ms">
+            {posts.map((post) => (
+              <ArticleCard
+                href={localizedPath(`/blog/${post.id.split('/').pop()}`, lang)}
+                eyebrow={post.data.tags[0]}
+                title={post.data.title}
+                description={post.data.description}
+                date={post.data.date}
+                readTime={t('blog.readTime').replace('{n}', String(readingMinutes(post.body ?? '')))}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
 
 <!-- Spotlights — year-round showcase program (links out to spotlight.gosim.org) -->
 <section id="spotlights" class="grain relative scroll-mt-24 overflow-hidden bg-ink text-paper">
@@ -413,27 +480,7 @@ const spotlightIcons = [
   </div>
 </section>
 
-<script>
-  // Staggered scroll reveals (progressive enhancement; CSS handles reduced-motion / no-JS).
-  const els = document.querySelectorAll('.reveal');
-  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (!reduce && 'IntersectionObserver' in window) {
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('is-in');
-            io.unobserve(entry.target);
-          }
-        }
-      },
-      { rootMargin: '0px 0px -10% 0px', threshold: 0.12 }
-    );
-    els.forEach((el) => io.observe(el));
-  } else {
-    els.forEach((el) => el.classList.add('is-in'));
-  }
-</script>
+<!-- Scroll reveals are wired up site-wide in BaseLayout. -->
 
 <script>
   // Nexus highlights: auto-cycle an accent "spotlight" through the values;

@@ -2,7 +2,13 @@
  * Bilingual founders content. Locale-independent bits (image, accent, link URL
  * and its label) live at the top level; name / role / bio are per-locale.
  * Content ported from GOSIM.org's #founders section.
+ *
+ * Portraits are imported (not /public paths) so Astro's <Image> can optimize
+ * them at build time.
  */
+import mYuan from '../assets/founders/m-yuan.jpeg';
+import jTao from '../assets/founders/j-tao.png';
+
 export const foundersPage = {
   en: {
     eyebrow: '// Founders',
@@ -18,7 +24,7 @@ export const foundersPage = {
 
 export const founders = [
   {
-    image: '/founders/m-yuan.jpeg',
+    image: mYuan,
     accent: 'var(--color-teal)',
     link: 'https://github.com/WasmEdge/WasmEdge',
     linkLabel: 'WasmEdge Runtime',
@@ -42,7 +48,7 @@ export const founders = [
     },
   },
   {
-    image: '/founders/j-tao.png',
+    image: jTao,
     accent: 'var(--color-coral)',
     link: 'https://csdn.net',
     linkLabel: 'CSDN',

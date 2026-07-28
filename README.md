@@ -40,8 +40,12 @@ npm run dev        # http://localhost:4321
 
 Section flow: **Hero** (globe) → **Next event** (upcoming-event banner) →
 **About** (Global Nexus) → **Three Pillars** → **Events** (past conferences &
-workshops) → **Spotlights** → **Newsletter**. Standalone pages: `/founders` and
-`/privacy` (each with a `/zh` counterpart where noted below).
+workshops) → **Latest stories** (3 newest posts) → **Spotlights** →
+**Newsletter**. Standalone pages: `/founders` and `/privacy` (each with a `/zh`
+counterpart where noted below).
+
+The stories section hides itself when the current locale has no posts, so a new
+locale never renders an empty shell.
 
 ## Project structure
 
@@ -49,9 +53,12 @@ workshops) → **Spotlights** → **Newsletter**. Standalone pages: `/founders` 
 src/
   content/              # Markdown content (the source of truth)
     events/             # conferences · workshops · spotlights (the main content)
-    blog/en, blog/zh    # stories (currently hidden from the homepage)
+    blog/en, blog/zh    # stories (homepage section + /blog archive)
     projects/ galleries/
   content.config.ts     # collection schemas
+  assets/               # build-optimized images (see "Images" below)
+    events/             # event & city photos (skyline, Paris, Hangzhou, …)
+    founders/           # founder portraits
   components/           # Globe, Home, Founders, SiteHeader/Footer,
                         #   LanguagePicker (globe dropdown), cards, …
   layouts/BaseLayout.astro
@@ -62,14 +69,28 @@ src/
     founders.ts         # founders content (bilingual)
     utils.ts            # locale helpers
   styles/global.css     # Tailwind import + design tokens + @font-face + effects
-public/
+public/                 # served verbatim, never optimized
   fonts/                # Clash Display TTFs
-  events/               # event & city images (skyline, Paris, Hangzhou, …)
-  founders/             # founder photos
   admin/                # Decap CMS (index.html + config.yml)
-  earth-blue-marble.jpg # globe texture
+  earth-blue-marble.jpg # globe texture (loaded at runtime by Three.js)
   logo.svg
 ```
+
+## Images
+
+Photos live in **`src/assets/`**, not `public/`, so Astro's `<Image>` compiles
+them to responsive **WebP** at build time. Rule of thumb:
+
+- **`src/assets/`** — anything rendered by a component or referenced from
+  content frontmatter. Optimized, hashed, and emitted per breakpoint.
+- **`public/`** — files that must keep a stable URL and byte-for-byte content:
+  the globe texture (fetched at runtime by Three.js, so the build can't see it),
+  fonts, `logo.svg`, `CNAME`.
+
+Event images are declared in frontmatter as a path **relative to the Markdown
+file** (`../../assets/events/paris.png`); the `image()` helper in
+`content.config.ts` turns that into `ImageMetadata`. Drop full-resolution
+originals in — the build downsizes them, so there's no need to pre-crop.
 
 ## Content model
 
@@ -80,14 +101,15 @@ public/
 | `title`, `description`, `date` | required |
 | `dateLabel` | human range shown in UI, e.g. `"October 16–17, 2026"` |
 | `location` | e.g. `"Shenzhen, China"` |
-| `image` | card / banner background (path under `/public`) |
+| `image` | card / banner background — path relative to the `.md`, e.g. `"../../assets/events/paris.png"` |
 | `url`, `urlZh` | external event site; `urlZh` used on `/zh` (falls back to `url`) |
 | `cfp` | Call-for-Proposals link (button on the upcoming banner) |
 | `status` | `upcoming` \| `past` \| `draft` |
 | `lang` | `en` \| `zh` (events fall back to `en` when a locale has none) |
 
-`blog`, `projects`, and `galleries` collections also exist (blog is hidden from
-the homepage; projects/galleries back placeholder pages).
+`blog` posts surface in the homepage "Latest stories" section and at `/blog`;
+unlike events they do **not** fall back to English, so `/zh` shows Chinese posts
+only. `projects` and `galleries` back placeholder pages for now.
 
 ## i18n
 
