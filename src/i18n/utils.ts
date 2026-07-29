@@ -1,4 +1,4 @@
-import { ui, defaultLang, type Lang } from './ui';
+import { ui, languages, defaultLang, type Lang } from './ui';
 
 /** Extract the locale from a URL pathname (e.g. /zh/blog -> 'zh'). */
 export function getLangFromUrl(url: URL): Lang {
@@ -32,9 +32,39 @@ export function readingMinutes(markdown: string): number {
   return Math.max(1, Math.round(cjk / 400 + words / 200));
 }
 
-/** Build a locale-aware path. EN (default) has no prefix; others get /<lang>. */
+/**
+ * Build a locale-aware path. EN (default) has no prefix; others get /<lang>.
+ *
+ * The root keeps its trailing slash — `/zh/`, not `/zh`. Pages build in
+ * directory format, so `/zh/` is the real URL: returning `/zh` made every nav
+ * anchor (`/zh#about`) point at a different path than the page the user was
+ * already on, so same-page jumps became full document reloads.
+ */
 export function localizedPath(path: string, lang: Lang): string {
   const clean = path.startsWith('/') ? path : `/${path}`;
   if (lang === defaultLang) return clean;
-  return `/${lang}${clean === '/' ? '' : clean}`;
+  return clean === '/' ? `/${lang}/` : `/${lang}${clean}`;
+}
+
+/**
+ * The current URL's equivalent in every locale — for language switchers.
+ *
+ * Strips whatever prefix the current page carries, then re-adds the target
+ * one through `localizedPath`, so the prefix rules (including the root's
+ * trailing slash) stay in exactly one place. Used by both the header dropdown
+ * and the mobile drawer.
+ */
+export function localeSwitchPaths(
+  url: URL
+): Array<{ lang: Lang; label: string; href: string; isCurrent: boolean }> {
+  const current = getLangFromUrl(url);
+  const segments = url.pathname.split('/').filter(Boolean);
+  const rest = (current === defaultLang ? segments : segments.slice(1)).join('/');
+
+  return (Object.keys(languages) as Lang[]).map((lang) => ({
+    lang,
+    label: languages[lang],
+    href: localizedPath(`/${rest}`, lang),
+    isCurrent: lang === current,
+  }));
 }

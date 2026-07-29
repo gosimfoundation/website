@@ -1,19 +1,7 @@
 ---
-import { languages } from '../i18n/ui';
-import { getLangFromUrl } from '../i18n/utils';
+import { localeSwitchPaths } from '../i18n/utils';
 
-const current = getLangFromUrl(Astro.url);
-
-// Compute the equivalent path in each locale by swapping the prefix.
-const segments = Astro.url.pathname.split('/').filter(Boolean);
-const rest = (current === 'en' ? segments : segments.slice(1)).join('/');
-
-function pathFor(lang: string): string {
-  if (lang === 'en') return `/${rest}`;
-  return `/${lang}${rest ? `/${rest}` : ''}`;
-}
-
-const locales = Object.keys(languages) as Array<keyof typeof languages>;
+const locales = localeSwitchPaths(Astro.url);
 ---
 
 <details class="lang-picker relative">
@@ -34,16 +22,16 @@ const locales = Object.keys(languages) as Array<keyof typeof languages>;
 
   <ul class="absolute right-0 top-full z-30 mt-2 min-w-[8.5rem] overflow-hidden rounded-xl border border-line bg-paper py-1 shadow-[0_16px_40px_-16px_rgba(16,36,42,0.4)]">
     {
-      locales.map((lang) => (
+      locales.map(({ lang, label, href, isCurrent }) => (
         <li>
           <a
-            href={pathFor(lang)}
+            href={href}
             hreflang={lang}
-            aria-current={lang === current ? 'true' : undefined}
-            class={`flex items-center justify-between gap-4 px-4 py-2 text-sm transition-colors hover:bg-mist ${lang === current ? 'font-semibold text-teal' : 'text-ink'}`}
+            aria-current={isCurrent ? 'true' : undefined}
+            class={`flex items-center justify-between gap-4 px-4 py-2 text-sm transition-colors hover:bg-mist ${isCurrent ? 'font-semibold text-teal' : 'text-ink'}`}
           >
-            {languages[lang]}
-            {lang === current && (
+            {label}
+            {isCurrent && (
               <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M5 13l4 4L19 7" />
               </svg>

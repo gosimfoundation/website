@@ -16,6 +16,7 @@ const posts = (await getCollection('blog', ({ data }) => data.lang === lang && !
 );
 
 const [featured, ...rest] = posts;
+const hasCover = Boolean(featured?.data.image);
 
 const dateFmt = new Intl.DateTimeFormat(lang === 'zh' ? 'zh-CN' : 'en-US', {
   dateStyle: 'medium',
@@ -47,51 +48,57 @@ const postPath = (id: string) => localizedPath(`/blog/${id.split('/').pop()}`, l
       <p class="border-t border-line py-8 text-muted">{t('blog.empty')}</p>
     ) : (
       <>
-        {/* Featured — newest post, styled like the upcoming-event banner so the
-            two "hero" blocks on the site share a language. Works with or
-            without a cover image. */}
+        {/* Featured — newest post as a light editorial split: cover at full
+            contrast on one side, copy on the other. Dark panels are reserved
+            for the upcoming-event banner so the two don't compete. Collapses
+            to a single column when a post has no cover. */}
         <a
           href={postPath(featured.id)}
-          class="group grain reveal relative block overflow-hidden rounded-3xl bg-ink-soft text-paper"
+          class:list={[
+            'group reveal grid overflow-hidden rounded-3xl border border-line bg-mist/50',
+            hasCover && 'md:grid-cols-2',
+          ]}
         >
           {featured.data.image && (
-            <Image
-              src={featured.data.image}
-              alt=""
-              loading="eager"
-              widths={[400, 640, 960, 1280]}
-              sizes="(max-width: 767px) 100vw, 60vw"
-              format="webp"
-              quality={72}
-              class="pointer-events-none absolute inset-y-0 right-0 hidden h-full w-3/5 object-cover opacity-90 transition-transform duration-[600ms] group-hover:scale-105 md:block"
-              style="mask-image: linear-gradient(90deg, transparent, #000 42%); -webkit-mask-image: linear-gradient(90deg, transparent, #000 42%);"
-            />
-          )}
-          <div
-            aria-hidden="true"
-            class="pointer-events-none absolute -top-24 -right-16 h-72 w-72 rounded-full bg-coral/30 blur-[110px]"
-          />
-          <div
-            aria-hidden="true"
-            class="pointer-events-none absolute -bottom-28 -left-20 h-72 w-72 rounded-full bg-teal/20 blur-[120px]"
-          />
-
-          <div class="relative z-[1] max-w-3xl p-8 sm:p-12 md:p-16">
-            <p class="tech-label flex flex-wrap items-center gap-x-3 gap-y-1 text-paper/60">
+            <div class="relative min-h-[240px] overflow-hidden md:min-h-[420px]">
+              <Image
+                src={featured.data.image}
+                alt={featured.data.imageAlt ?? ''}
+                loading="eager"
+                widths={[400, 640, 960]}
+                sizes="(max-width: 767px) 100vw, 50vw"
+                format="webp"
+                quality={72}
+                class="absolute inset-0 h-full w-full object-cover transition-transform duration-[600ms] group-hover:scale-105"
+              />
               {featured.data.tags[0] && (
-                <span class="rounded-full bg-lime px-3 py-1 text-ink">{featured.data.tags[0]}</span>
+                <span class="tech-label absolute top-5 left-5 rounded-full bg-paper px-3 py-1.5 text-ink shadow-sm">
+                  {featured.data.tags[0]}
+                </span>
+              )}
+            </div>
+          )}
+
+          <div class="flex flex-col justify-center p-8 sm:p-10 md:p-14">
+            <p class="tech-label flex flex-wrap items-center gap-x-3 gap-y-1 text-muted">
+              {/* Without a cover there is no image corner to pin the tag to. */}
+              {!hasCover && featured.data.tags[0] && (
+                <>
+                  <span class="text-coral">{featured.data.tags[0]}</span>
+                  <span aria-hidden="true">·</span>
+                </>
               )}
               <span>{dateFmt.format(featured.data.date)}</span>
               <span aria-hidden="true">·</span>
               <span>{readLabel(featured.body ?? '')}</span>
             </p>
-            <h2 class="mt-6 text-3xl leading-[1.05] font-bold tracking-tight sm:text-4xl md:text-5xl">
+            <h2 class="mt-5 text-3xl leading-[1.05] font-bold tracking-tight transition-colors group-hover:text-teal sm:text-4xl">
               {featured.data.title}
             </h2>
-            <p class="mt-5 max-w-2xl text-lg leading-relaxed text-paper/70">
+            <p class="mt-4 text-[1.0625rem] leading-relaxed text-muted">
               {featured.data.description}
             </p>
-            <span class="tech-label mt-8 inline-flex items-center gap-2 rounded-full bg-lime px-6 py-3 text-ink transition-all group-hover:gap-3">
+            <span class="tech-label mt-8 inline-flex items-center gap-2 text-teal transition-all group-hover:gap-3">
               {t('blog.read')}
               <svg
                 class="h-4 w-4"
