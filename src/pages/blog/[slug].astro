@@ -19,6 +19,12 @@ export async function getStaticPaths() {
 const { post, next } = Astro.props;
 ---
 
-<BaseLayout title={post.data.title} description={post.data.description}>
+<BaseLayout
+  title={post.data.title}
+  description={post.data.description}
+  image={post.data.image}
+  imageAlt={post.data.imageAlt}
+  ogType="article"
+>
   <Article post={post} next={next} />
 </BaseLayout>

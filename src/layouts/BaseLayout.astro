@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import { getImage } from 'astro:assets';
 import SiteHeader from '../components/SiteHeader.astro';
 import SiteFooter from '../components/SiteFooter.astro';
 import { getLangFromUrl } from '../i18n/utils';
@@ -9,10 +10,38 @@ interface Props {
   description?: string;
   /** When true, the header sits over a full-bleed hero (transparent until scroll). */
   transparentHeader?: boolean;
+  /** Social preview image. Pages without one fall back to the site card. */
+  image?: ImageMetadata;
+  imageAlt?: string;
+  /** 'article' for blog posts, 'website' everywhere else. */
+  ogType?: 'website' | 'article';
 }
 
-const { title, description = 'GOSIM — a global home for open-source conferences, stories, and community.', transparentHeader = false } = Astro.props;
+const {
+  title,
+  description = 'GOSIM — a global home for open-source conferences, stories, and community.',
+  transparentHeader = false,
+  image,
+  imageAlt,
+  ogType = 'website',
+} = Astro.props;
 const lang = getLangFromUrl(Astro.url);
+
+// Social cards are rendered to a fixed 1200x630 so every platform crops them
+// the same way, and as JPEG because WebP support across scrapers is uneven.
+// Absolute URLs are mandatory here — scrapers do not resolve relative paths.
+const social = image
+  ? await getImage({
+      src: image,
+      width: 1200,
+      height: 630,
+      fit: 'cover',
+      format: 'jpeg',
+      quality: 82,
+    })
+  : null;
+const ogImage = new URL(social?.src ?? '/og-default.jpg', Astro.site).href;
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
 ---
 
 <!doctype html>
@@ -24,9 +53,24 @@ const lang = getLangFromUrl(Astro.url);
     <link rel="sitemap" href="/sitemap-index.xml" />
     <title>{title}</title>
     <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:site_name" content="GOSIM" />
+    <meta property="og:locale" content={lang === 'zh' ? 'zh_CN' : 'en_US'} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={imageAlt ?? title} />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+    <meta name="twitter:image:alt" content={imageAlt ?? title} />
   </head>
   <body>
     <SiteHeader transparent={transparentHeader} />
