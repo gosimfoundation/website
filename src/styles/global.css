@@ -51,6 +51,13 @@
   --color-coral: #f26b4f;
   --color-lime: #bddb74;
   --color-line: rgba(16, 36, 42, 0.14);
+
+  /* Tailwind ships -0.025em. Clash Display's space glyph is already narrow —
+     measured at 0.19x the width of an 'n', against 0.42x for Inter at the same
+     size — so the default tightening closed word gaps almost entirely and long
+     headlines ran together ("C Had" reading as one word). Pulled back to
+     -0.015em; the breathing room comes from word-spacing on headings below. */
+  --tracking-tight: -0.015em;
 }
 
 /* ---------------------------------------------------------------------------
@@ -72,6 +79,11 @@
   h1, h2, h3, h4 {
     font-family: var(--font-display);
     letter-spacing: -0.01em;
+    /* Compensates for Clash Display's narrow space glyph (see --tracking-tight).
+       In em, so it scales with the heading rather than breaking apart at the
+       hero sizes. Harmless on Chinese headings, which have no inter-word
+       spaces — it only widens the gaps around embedded Latin terms. */
+    word-spacing: 0.06em;
   }
 
   a {

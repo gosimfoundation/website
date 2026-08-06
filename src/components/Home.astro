@@ -264,7 +264,14 @@ const spotlightIcons = [
     <div class="reveal grid gap-x-12 gap-y-6 md:grid-cols-[1.6fr_1fr] md:items-end">
       <div>
         <p class="tech-label text-teal">{c.events.eyebrow}</p>
-        <h2 class="mt-3 text-5xl leading-[1.03] font-bold tracking-tight sm:text-6xl lg:text-[4.5rem]">
+        {/* Fluid below sm: "Conferences" can't break, and at a fixed 3rem it
+            measures 311px — wider than the 265px grid cell at a 320px viewport,
+            so it pushed the whole page into horizontal scroll. 13vw keeps the
+            longest word inside the gutters down to 320px and still reaches the
+            full 3rem by ~370px. */}
+        <h2
+          class="mt-3 text-[clamp(2.35rem,13vw,3rem)] leading-[1.03] font-bold tracking-tight sm:text-6xl lg:text-[4.5rem]"
+        >
           {c.events.heading}
         </h2>
       </div>

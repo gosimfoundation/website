@@ -127,6 +127,7 @@ const postPath = (id: string) => localizedPath(`/blog/${id.split('/').pop()}`, l
                   description={post.data.description}
                   date={post.data.date}
                   readTime={readLabel(post.body ?? '')}
+                  image={post.data.image}
                 />
               </div>
             ))}
