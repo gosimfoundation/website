@@ -1,0 +1,51 @@
+---
+import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getLangFromUrl } from '../i18n/utils';
+
+const lang = getLangFromUrl(Astro.url);
+const copy = {
+  en: { title: 'Event galleries', enlarge: 'Open larger photo', description: 'Photographs from GOSIM conferences and workshops.' },
+  zh: { title: '活动图集', enlarge: '查看大图', description: '用照片回顾 GOSIM 大会与工作坊。' },
+}[lang];
+const galleries = (await getCollection('galleries', ({ data }) => data.lang === lang && data.photos.length > 0))
+  .sort((a, b) => (b.data.date?.getTime() ?? 0) - (a.data.date?.getTime() ?? 0));
+const cover = galleries[0]?.data.photos[0];
+---
+
+<BaseLayout title={`${copy.title} — GOSIM`} description={copy.description} image={cover?.image} imageAlt={cover?.caption}>
+  <div class="mx-auto max-w-[88rem] px-5 pt-28 pb-12 sm:px-8 sm:pt-32 lg:px-[72px]">
+    <h1 class="text-5xl leading-none font-bold tracking-tight sm:text-7xl">{copy.title}</h1>
+    {galleries.map(({ id, data }, galleryIndex) => (
+      <section id={id} class="mt-9 scroll-mt-24 border-t border-line pt-7 sm:mt-12 sm:pt-9">
+        <header class="mb-6">
+          <h2 class="text-3xl font-semibold tracking-tight sm:text-4xl">{data.title}</h2>
+          <p class="mt-2 max-w-prose leading-relaxed text-muted">{data.description}</p>
+        </header>
+        <div class="grid gap-x-6 gap-y-7 sm:grid-cols-2">
+          {data.photos.map((photo, index) => {
+            const wide = photo.image.width >= 1200 && (index === 0 || (index === data.photos.length - 1 && index % 2 === 1));
+            const widths = [400, 640, 960, 1280].filter(width => width < photo.image.width);
+            widths.push(photo.image.width);
+            return (
+              <figure class:list={['min-w-0', wide && 'sm:col-span-2']}>
+                <a href={photo.image.src} aria-label={`${copy.enlarge} · ${photo.caption}`} class="group block overflow-hidden rounded-xl">
+                  <Image src={photo.image} alt={photo.caption} widths={widths}
+                    sizes={wide ? '(min-width: 1408px) 1264px, 94vw' : '(min-width: 640px) 48vw, 94vw'}
+                    loading={galleryIndex === 0 && index === 0 ? 'eager' : 'lazy'} format="webp" quality={78}
+                    class:list={[
+                      'w-full object-cover motion-safe:transition-transform motion-safe:duration-300 motion-safe:group-hover:scale-[1.015]',
+                      wide ? 'aspect-[16/10] sm:aspect-[2.1]' : 'aspect-[3/2]',
+                      photo.alignTop ? 'object-top' : index === 0 && 'object-[center_30%]',
+                    ]} />
+                </a>
+                <figcaption class="mt-2 text-sm leading-relaxed text-muted">{photo.caption}</figcaption>
+              </figure>
+            );
+          })}
+        </div>
+      </section>
+    ))}
+  </div>
+</BaseLayout>

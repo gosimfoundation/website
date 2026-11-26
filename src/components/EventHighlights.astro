@@ -1,0 +1,270 @@
+---
+import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import RecordingPreview from './RecordingPreview.astro';
+import { getLangFromUrl, localizedPath } from '../i18n/utils';
+import { hackathonCopy, hackathonsByEvent } from '../i18n/hackathons';
+import audience from '../assets/galleries/paris-2026/PZZ_6844.jpg';
+
+const lang = getLangFromUrl(Astro.url);
+const copy = {
+  en: {
+    title: 'Event highlights',
+    intro: 'Revisit talks, workshops and co-hosted Spotlights from past GOSIM gatherings.',
+    years: 'Browse by year',
+    photo: 'STATION F · GOSIM Paris 2026',
+    alt: 'Rows of conference attendees watch the stage in the red-lit auditorium.',
+    gallery: 'View event photos',
+    site: 'Visit the event website',
+    playVideo: 'Play video',
+    watchVideo: 'Watch on YouTube',
+    coHosted: 'Co-hosted programs',
+    spotlight: 'GOSIM Spotlight',
+    hackathons: 'Hackathon highlights',
+  },
+  zh: {
+    title: '往届活动回顾',
+    intro: '回顾 GOSIM 历届大会的演讲、工作坊与同期举办的 Spotlight 项目展示。',
+    years: '按年份浏览',
+    photo: 'STATION F · GOSIM 巴黎 2026',
+    alt: '礼堂内坐满了观众，红色灯光映在舞台一侧的墙面上。',
+    gallery: '浏览活动图集',
+    site: '访问活动官网',
+    playVideo: '播放视频',
+    watchVideo: '在 YouTube 上观看',
+    coHosted: '同期活动',
+    spotlight: 'GOSIM Spotlight',
+    hackathons: '黑客松回顾',
+  },
+}[lang];
+
+type EventLink = {
+  href: string;
+  label: string;
+  kind: 'primary' | 'resource' | 'website';
+};
+
+const past = await getCollection('events', ({ data }) => data.status === 'past');
+const entries = past.flatMap(({ id, data }) => {
+  const { highlight } = data;
+  if (!highlight) return [];
+  const site = lang === 'zh' ? data.urlZh ?? data.url : data.url;
+  const { video, spotlight, workshop } = highlight;
+  const links = highlight.resources.map<EventLink>((resource, index) => ({
+    href: lang === 'zh' ? resource.urlZh ?? resource.url : resource.url,
+    label: resource[lang],
+    kind: !video && index === 0 ? 'primary' : 'resource',
+  }));
+  if (video) {
+    links.unshift({
+      href: `https://www.youtube.com/watch?v=${video.youtubeId}`,
+      label: copy.watchVideo,
+      kind: 'primary',
+    });
+  }
+  if (site) links.push({ href: site, label: copy.site, kind: 'website' });
+  return [{
+    id,
+    date: data.date,
+    endDate: data.endDate,
+    links,
+    video,
+    photo: highlight.photo,
+    spotlight: spotlight && { ...spotlight[lang], url: spotlight.url },
+    workshop: workshop && {
+      title: workshop[lang].title,
+      summary: summaryParts(workshop[lang].summary),
+      video: workshop.video,
+      resources: workshop.resources,
+    },
+    title: highlight[lang].title,
+    summary: summaryParts(highlight[lang].summary),
+  }];
+}).sort((a, b) => b.date.getTime() - a.date.getTime() || b.id.localeCompare(a.id));
+const years = [...new Set(entries.map((event) => event.date.getUTCFullYear()))];
+const dates = new Intl.DateTimeFormat(lang === 'zh' ? 'zh-CN' : 'en-US', {
+  month: 'long', day: 'numeric', timeZone: 'UTC',
+});
+const hackathonsPath = localizedPath('/hackathons/', lang);
+
+// Render authored HTTPS links as ordinary Astro nodes, with all text escaped.
+function summaryParts(summary: string) {
+  const parts: { text: string; href?: string }[] = [];
+  let offset = 0;
+  for (const match of summary.matchAll(/\[([^\]\n]+)\]\((https:\/\/[^)\s]+)\)/g)) {
+    parts.push({ text: summary.slice(offset, match.index) });
+    parts.push({ text: match[1], href: match[2] });
+    offset = match.index + match[0].length;
+  }
+  parts.push({ text: summary.slice(offset) });
+  return parts;
+}
+---
+
+<BaseLayout title={`${copy.title} — GOSIM`} description={copy.intro} image={audience} imageAlt={copy.alt}>
+  <div class="mx-auto max-w-[92rem] px-5 pt-28 pb-12 sm:px-8 sm:pt-32 lg:px-[72px]">
+    <header class="grid items-center gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
+      <div>
+        <h1 class="max-w-[12ch] text-[clamp(3.1rem,7vw,6.5rem)] leading-[0.98] font-bold tracking-tight">{copy.title}</h1>
+        <p class="mt-5 max-w-md text-lg leading-relaxed text-muted">{copy.intro}</p>
+        <a class="archive-link mt-4 py-2 text-sm font-semibold" href={hackathonsPath}>
+          {hackathonCopy[lang].title} <span aria-hidden="true">→</span>
+        </a>
+        <nav aria-label={copy.years} class="mt-7">
+          <p class="tech-label text-muted">{copy.years}</p>
+          <div class="mt-2 flex flex-wrap gap-2">
+            {years.map((year) => (
+              <a class="inline-flex min-h-11 items-center rounded-full border border-line px-3 text-sm font-semibold tabular-nums transition-colors hover:border-teal hover:bg-mist focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal" href={`#year-${year}`}>
+                {year}
+              </a>
+            ))}
+          </div>
+        </nav>
+      </div>
+      <figure>
+        <Image src={audience} alt={copy.alt} widths={[400, 640, 960, 1280]}
+          sizes="(min-width: 1024px) 49vw, 100vw" loading="eager" format="webp"
+          class="aspect-[16/10] h-auto w-full rounded-xl object-cover" />
+        <figcaption class="mt-2 flex flex-wrap justify-between gap-x-4 gap-y-1 text-sm text-muted">
+          {copy.photo}
+          <a class="archive-link" href={localizedPath('/galleries/', lang)}>{copy.gallery} <span aria-hidden="true">→</span></a>
+        </figcaption>
+      </figure>
+    </header>
+
+    <div class="mt-12 sm:mt-16">
+      {years.map((year) => (
+        <section id={`year-${year}`} aria-labelledby={`heading-${year}`}
+          class="grid scroll-mt-24 gap-x-10 border-t border-ink/30 py-8 md:grid-cols-[1fr_4fr] md:py-12">
+          <h2 id={`heading-${year}`} class="mb-7 text-5xl leading-none font-bold tracking-tight text-teal md:sticky md:top-28 md:mb-0 md:self-start">
+            {year}
+          </h2>
+          <div class="divide-y divide-line">
+            {entries.filter((event) => event.date.getUTCFullYear() === year).map((event) => (
+              <article id={event.id} class="grid scroll-mt-24 gap-x-8 gap-y-3 py-7 first:pt-0 last:pb-0 lg:grid-cols-[1fr_1.65fr]">
+                <div>
+                  <p class="tech-label text-muted">{event.endDate ? dates.formatRange(event.date, event.endDate) : dates.format(event.date)}</p>
+                  <h3 class="mt-2 text-2xl leading-tight font-semibold tracking-tight sm:text-3xl">{event.title}</h3>
+                  {event.photo && (
+                    <figure class="mt-4 max-w-sm">
+                      <Image src={event.photo.image} alt={event.photo[lang]} widths={[320, 480, 640]}
+                        sizes="(min-width: 1024px) 25vw, (min-width: 420px) 384px, 90vw"
+                        loading="lazy" format="webp" class="h-auto w-full rounded-lg" />
+                      <figcaption class="mt-1.5 text-sm text-muted">{event.photo[lang]}</figcaption>
+                    </figure>
+                  )}
+                </div>
+                <div class="min-w-0">
+                  <p class="max-w-prose leading-relaxed">{event.summary.map((part) => (
+                    part.href ? <a class="speaker-link" href={part.href}>{part.text}</a> : part.text
+                  ))}</p>
+                  {event.video && (
+                    <RecordingPreview youtubeId={event.video.youtubeId} title={event.video[lang]}
+                      playLabel={copy.playVideo} thumbnail={event.video.thumbnail} />
+                  )}
+                  {event.links.length > 0 && (
+                    <ul role="list" class="mt-5 flex max-w-prose flex-wrap gap-2">
+                      {event.links.map((link) => (
+                        <li class="min-w-0 max-w-full">
+                          <a href={link.href} class:list={[
+                            'flex h-full min-h-11 items-center gap-3 rounded-lg border border-line px-3 py-2 text-sm leading-snug font-semibold transition-colors hover:border-teal focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal',
+                            link.kind === 'primary' && 'bg-lime',
+                            link.kind === 'resource' && 'bg-mist',
+                            link.kind === 'website' && 'bg-paper hover:bg-mist',
+                          ]}>
+                            <span class="min-w-0 wrap-break-word">{link.label}</span>
+                            <span aria-hidden="true" class="shrink-0 text-base leading-none text-teal">↗</span>
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {event.workshop && (
+                    <section id={`${event.id}-workshop`} aria-labelledby={`${event.id}-workshop-title`}
+                      class="mt-6 scroll-mt-24 border-s-2 border-teal ps-4">
+                      <h4 id={`${event.id}-workshop-title`} class="text-lg font-semibold tracking-tight">{event.workshop.title}</h4>
+                      <p class="mt-2 max-w-prose leading-relaxed">{event.workshop.summary.map((part) => (
+                        part.href ? <a class="speaker-link" href={part.href}>{part.text}</a> : part.text
+                      ))}</p>
+                      {event.workshop.video && (
+                        <RecordingPreview youtubeId={event.workshop.video.youtubeId} title={event.workshop.video[lang]}
+                          playLabel={copy.playVideo} thumbnail={event.workshop.video.thumbnail} />
+                      )}
+                      {event.workshop.resources.length > 0 && (
+                        <ul role="list" class="mt-1 flex max-w-prose flex-wrap gap-x-5">
+                          {event.workshop.resources.map((resource) => (
+                            <li>
+                              <a class="related-link" href={lang === 'zh' ? resource.urlZh ?? resource.url : resource.url}>
+                                {resource[lang]} <span aria-hidden="true">↗</span>
+                              </a>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </section>
+                  )}
+                  {(hackathonsByEvent[event.id] || event.spotlight) && (
+                    <section class="mt-6 max-w-prose border-t border-line pt-4">
+                      <h4 class="tech-label text-muted">{copy.coHosted}</h4>
+                      <ul role="list" class="mt-1 flex flex-wrap gap-x-5">
+                        {hackathonsByEvent[event.id] && (
+                          <li>
+                            <a href={`${hackathonsPath}#${event.id}`} class="related-link">
+                              {copy.hackathons} <span aria-hidden="true">→</span>
+                            </a>
+                          </li>
+                        )}
+                        {event.spotlight && (
+                          <li>
+                            <a href={event.spotlight.url} class="related-link">
+                              {copy.spotlight} <span aria-hidden="true">↗</span>
+                            </a>
+                          </li>
+                        )}
+                      </ul>
+                      {event.spotlight && (
+                        <p class="text-sm leading-relaxed text-muted">
+                          <strong class="font-semibold text-ink">{event.spotlight.title}</strong>
+                          {' · '}{event.spotlight.summary}
+                        </p>
+                      )}
+                    </section>
+                  )}
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .archive-link,
+  .related-link,
+  .speaker-link {
+    color: var(--color-ink);
+    text-decoration: underline;
+    text-decoration-color: var(--color-teal);
+    text-underline-offset: 0.25em;
+  }
+  .archive-link {
+    display: inline-block;
+  }
+  .related-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 2.75rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+  .archive-link:hover, .archive-link:focus-visible,
+  .related-link:hover, .related-link:focus-visible,
+  .speaker-link:hover, .speaker-link:focus-visible {
+    color: var(--color-teal);
+    text-decoration-thickness: 2px;
+  }
+</style>

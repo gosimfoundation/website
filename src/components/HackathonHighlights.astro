@@ -1,0 +1,166 @@
+---
+import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getLangFromUrl, localizedPath } from '../i18n/utils';
+import { hackathonCopy, hackathonsByEvent } from '../i18n/hackathons';
+import teams from '../assets/galleries/shenzhen-2026/hackathon-tables.jpg';
+import robotics from '../assets/galleries/paris-2026/ZYL01419.jpg';
+
+const lang = getLangFromUrl(Astro.url);
+const copy = hackathonCopy[lang];
+const events = (await getCollection('events', ({ data }) => data.status === 'past'))
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime() || b.id.localeCompare(a.id));
+const editions = events.flatMap(({ id, data }) => {
+  const hackathons = hackathonsByEvent[id];
+  if (!hackathons?.length || !data.highlight) return [];
+  return [{
+    id,
+    year: data.date.getUTCFullYear(),
+    title: data.highlight[lang].title,
+    hackathons,
+  }];
+});
+const featured = editions.find(({ id }) => id === 'shenzhen-2026');
+const archive = editions.filter(({ id }) => id !== featured?.id);
+const eventsPath = localizedPath('/events/', lang);
+---
+
+<BaseLayout title={`${copy.title} — GOSIM`} description={copy.intro} image={teams} imageAlt={copy.photo}>
+  <div class="pt-[78px]">
+    <header class="hackathon-hero relative isolate flex min-h-[29rem] items-end overflow-hidden bg-ink text-paper lg:min-h-[34rem]">
+      <Image src={teams} alt={copy.photo} widths={[480, 768, 1024, 1400, 1620]} sizes="100vw"
+        loading="eager" fetchpriority="high" format="webp"
+        class="absolute inset-x-0 top-0 h-60 w-full object-cover object-[62%_56%] md:h-full" />
+      <div class="hero-shade pointer-events-none absolute inset-0"></div>
+      <div class="relative mx-auto w-full max-w-[92rem] px-5 pt-48 pb-10 sm:px-8 md:pt-24 md:pb-12 lg:px-[72px] lg:py-20">
+        <h1 class="max-w-[11ch] text-[clamp(2.65rem,8vw,6rem)] leading-[0.98] font-bold tracking-tight">{copy.title}</h1>
+        <p class="mt-5 max-w-sm text-base leading-relaxed text-paper/90 sm:text-lg">{copy.intro}</p>
+        <div class="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2">
+          <a href={featured ? `#${featured.id}` : '#past-editions'} class="inline-flex min-h-11 items-center gap-2 rounded-full bg-lime px-4 py-2.5 text-sm font-semibold text-ink transition-colors hover:bg-mist focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-lime">
+            {copy.explore} <span aria-hidden="true">↓</span>
+          </a>
+          <a href="https://create.gosim.org/" class="inline-flex min-h-11 items-center gap-2 text-sm font-medium underline decoration-paper/55 underline-offset-4 transition-colors hover:text-lime">
+            {copy.portal} <span aria-hidden="true">↗</span>
+          </a>
+        </div>
+        <p class="mt-6 text-xs text-paper/85 lg:absolute lg:right-[72px] lg:bottom-7">{copy.photoCredit}</p>
+      </div>
+    </header>
+
+    {featured && (
+      <section id={featured.id} aria-labelledby={`heading-${featured.id}`}
+        class="mx-auto grid max-w-[92rem] scroll-mt-24 gap-x-16 gap-y-6 px-5 py-12 sm:px-8 sm:py-16 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:px-[72px]">
+        <div>
+          <p class="tech-label text-teal">{featured.year} · {copy.challengeCount(featured.hackathons.length)}</p>
+          <h2 id={`heading-${featured.id}`} class="mt-3 text-4xl leading-tight font-semibold tracking-tight">{featured.title}</h2>
+          <a href={`${eventsPath}#${featured.id}`} class="archive-link mt-3 inline-block text-sm font-medium">
+            {copy.event} <span aria-hidden="true">→</span>
+          </a>
+        </div>
+        <ul role="list" class="divide-y divide-line border-y border-line">
+          {featured.hackathons.map((item) => (
+            <li>
+              <a href={item.url} class="challenge-link group grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4 px-2 py-4 transition-colors hover:bg-mist focus-visible:bg-mist sm:px-4">
+                <div>
+                  <h3 class="text-xl leading-tight font-semibold group-hover:text-teal group-focus-visible:text-teal">{item[lang].title}</h3>
+                  <p class="mt-1.5 max-w-prose text-sm leading-relaxed text-muted sm:text-base">{item[lang].summary}</p>
+                </div>
+                <span aria-hidden="true" class="flex size-8 items-center justify-center rounded-full bg-mist text-teal transition-colors group-hover:bg-lime group-focus-visible:bg-lime">↗</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+
+    <section id="past-editions" aria-labelledby="heading-past-editions" class="scroll-mt-24 border-t border-line bg-mist/65">
+      <div class="mx-auto max-w-[92rem] px-5 py-12 sm:px-8 sm:py-16 lg:px-[72px]">
+        <h2 id="heading-past-editions" class="text-4xl leading-tight font-semibold tracking-tight sm:text-5xl">{copy.archive}</h2>
+        <div class="mt-7 grid items-start gap-x-12 gap-y-7 md:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
+          <figure>
+            <Image src={robotics} alt={copy.parisPhoto} widths={[400, 640, 960, 1280]}
+              sizes="(min-width: 768px) 40vw, 94vw" loading="lazy" format="webp"
+              class="aspect-[16/10] w-full rounded-xl object-cover" />
+            <figcaption class="mt-2 text-sm text-muted">{copy.parisPhoto}</figcaption>
+          </figure>
+          <div class="divide-y divide-ink/15 border-y border-ink/15">
+            {archive.map(({ id, year, title, hackathons }) => (
+              <details id={id} class="edition group scroll-mt-24">
+                <summary class="grid cursor-pointer list-none grid-cols-[minmax(0,1fr)_auto] items-center gap-3 py-4 pl-1 pr-2 transition-colors hover:text-teal">
+                  <span>
+                    <span class="block text-xs font-medium text-muted">{year} · {copy.challengeCount(hackathons.length)}</span>
+                    <span class="mt-1 block text-xl font-semibold leading-tight group-open:text-teal">{title}</span>
+                  </span>
+                  <span aria-hidden="true" class="relative flex size-8 shrink-0 items-center justify-center rounded-full border border-ink/20 text-teal group-open:bg-paper">
+                    <span class="h-px w-3 bg-current"></span>
+                    <span class="absolute h-3 w-px bg-current motion-safe:transition-transform group-open:rotate-90"></span>
+                  </span>
+                </summary>
+                <div class="pb-5 pl-1 pr-2">
+                  <ul role="list" class="space-y-4">
+                    {hackathons.map((item) => (
+                      <li>
+                        <a href={item.url} class="archive-link text-sm font-semibold">{item[lang].title} <span aria-hidden="true">↗</span></a>
+                        <p class="mt-1 max-w-prose text-sm leading-relaxed text-muted">{item[lang].summary}</p>
+                      </li>
+                    ))}
+                  </ul>
+                  <a href={`${eventsPath}#${id}`} class="archive-link mt-4 inline-block text-sm font-medium">
+                    {copy.event} <span aria-hidden="true">→</span>
+                  </a>
+                </div>
+              </details>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</BaseLayout>
+
+<script>
+  const openLinkedEdition = () => {
+    const edition = document.getElementById(window.location.hash.slice(1));
+    if (edition instanceof HTMLDetailsElement && edition.classList.contains('edition')) {
+      edition.open = true;
+    }
+  };
+  openLinkedEdition();
+  window.addEventListener('hashchange', openLinkedEdition);
+</script>
+
+<style>
+  .hero-shade {
+    background: linear-gradient(180deg, transparent 5rem, #10242a8c 10rem, var(--color-ink) 15rem);
+  }
+
+  @media (min-width: 48rem) {
+    .hero-shade {
+      background:
+        linear-gradient(90deg, #0b1d22fa 0%, #0b1d22ea 26%, #0b1d2296 47%, #0b1d2200 78%),
+        linear-gradient(0deg, #0b1d2277, transparent 28%);
+    }
+  }
+
+  .edition summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .challenge-link:focus-visible,
+  .edition summary:focus-visible {
+    outline: 2px solid var(--color-teal);
+    outline-offset: -2px;
+  }
+
+  .archive-link {
+    text-decoration: underline;
+    text-decoration-color: var(--color-teal);
+    text-underline-offset: 0.25em;
+  }
+
+  .archive-link:hover,
+  .archive-link:focus-visible {
+    color: var(--color-teal);
+  }
+</style>

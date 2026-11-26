@@ -130,17 +130,31 @@ only. `projects` and `galleries` back placeholder pages for now.
 **Developers / Markdown users:** add a `.md` file under `src/content/<collection>/`
 with the required frontmatter (see existing samples), then commit.
 
-**Non-technical editors:** use the `/admin` web UI. Locally:
+**Non-technical editors:** use the `/admin` web UI at
+[gosim.org/admin](https://gosim.org/admin/) — sign in with the email and
+password from your DecapBridge invite (no GitHub account needed). Saving
+creates a draft; **Publish** puts it live a couple of minutes later.
+
+Developers can also run the CMS against the local checkout:
 
 ```bash
 npx decap-server   # terminal 1 — local git backend
 npm run dev        # terminal 2 — then open http://localhost:4321/admin
 ```
 
-## Deployment / CMS auth (TODO)
+The local proxy skips DecapBridge auth and doesn't support the editorial
+workflow — comment out `publish_mode` in `public/admin/config.yml` when
+testing writes locally.
 
-Decap's `git-gateway` backend is Netlify-native. On **GitHub Pages** (static),
-the CMS needs the **GitHub backend behind an external OAuth proxy** (a small
-serverless function) — wire this up before enabling `/admin` in production.
-Until then, `local_backend: true` in `public/admin/config.yml` supports local
-editing via `npx decap-server`.
+## Deployment / CMS auth
+
+Pushes to `main` build and deploy to GitHub Pages automatically
+(`.github/workflows/astro.yml`).
+
+Production `/admin` authenticates through **[DecapBridge](https://decapbridge.com)**,
+a hosted replacement for Netlify's deprecated Git Gateway. It holds a
+fine-grained PAT scoped to this repo (Contents + Pull requests, read/write) —
+rotate it in the DecapBridge dashboard when it expires — and editors are
+invited by email from that same dashboard. The CMS runs in
+`editorial_workflow` mode: saves become draft PRs and **Publish** merges them
+to `main`, so a malformed post can never block the deploy pipeline.

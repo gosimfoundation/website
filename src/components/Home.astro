@@ -1,10 +1,13 @@
 ---
 import { getCollection } from 'astro:content';
 import { Image } from 'astro:assets';
+import highlightsPhoto from '../assets/events/shenzhen-2026-dhh-omarchy.webp';
+import boothPhoto from '../assets/galleries/paris-2026/PZZ_7033.jpg';
 import Globe from './Globe.astro';
 import ArticleCard from './ArticleCard.astro';
 import { getLangFromUrl, useTranslations, localizedPath, readingMinutes } from '../i18n/utils';
 import { homeContent } from '../i18n/home';
+import { getLocalizedEvents } from '../i18n/events';
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
@@ -17,18 +20,9 @@ const posts = (await getCollection('blog', ({ data }) => data.lang === lang && !
   .sort((a, b) => b.data.date.getTime() - a.data.date.getTime())
   .slice(0, 3);
 
-let events = (await getCollection('events', ({ data }) => data.lang === lang)).sort(
-  (a, b) => b.data.date.getTime() - a.data.date.getTime()
-);
-// Fall back to English events when this locale has none yet (event content is
-// currently English-only), so the sections still render on /zh/.
-if (events.length === 0) {
-  events = (await getCollection('events', ({ data }) => data.lang === 'en')).sort(
-    (a, b) => b.data.date.getTime() - a.data.date.getTime()
-  );
-}
+const events = await getLocalizedEvents(lang);
 const upcomingEvents = events.filter((e) => e.data.status === 'upcoming');
-const pastEvents = events.filter((e) => e.data.status !== 'upcoming');
+const pastEvents = events.filter((e) => e.data.status === 'past');
 
 // timeZone: 'UTC' — frontmatter dates parse as UTC midnight, so formatting in
 // the viewer's local zone would render the previous day west of Greenwich.
@@ -86,8 +80,8 @@ const spotlightIcons = [
     ></h1>
     <p class="mt-6 max-w-md text-lg text-muted">{c.hero.subtitle}</p>
     <div class="mt-8 flex flex-wrap gap-3">
-      <a href="#upcoming" class="tech-label inline-flex items-center gap-2 rounded-full bg-lime px-6 py-3 text-ink transition-all hover:gap-3">
-        {t('nav.upcoming')}
+      <a href={upcomingEvents.length ? '#upcoming' : localizedPath('/events/', lang)} class="tech-label inline-flex items-center gap-2 rounded-full bg-lime px-6 py-3 text-ink transition-all hover:gap-3">
+        {t(upcomingEvents.length ? 'nav.upcoming' : 'nav.highlights')}
         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
       </a>
     </div>
@@ -98,7 +92,7 @@ const spotlightIcons = [
   </div>
 
   <a
-    href="#upcoming"
+    href="#highlights"
     class="hero-scroll absolute bottom-6 left-1/2 z-[5] hidden -translate-x-1/2 flex-col items-center gap-1.5 text-ink/55 transition-colors hover:text-teal md:flex"
     aria-label={t('scroll.hint')}
   >
@@ -109,7 +103,31 @@ const spotlightIcons = [
   </a>
 </section>
 
-<!-- Next event — highlighted right after the hero -->
+<section id="highlights" aria-labelledby="highlights-heading"
+  class="mx-auto max-w-[92rem] scroll-mt-24 px-5 pt-8 sm:px-8 md:pt-12 lg:px-[72px]">
+  <a href={localizedPath('/events/', lang)} aria-labelledby="highlights-cta"
+    class="group reveal grid overflow-hidden rounded-2xl bg-ink text-paper focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-teal md:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]">
+    <div class="flex flex-col items-start justify-center p-6 sm:p-10 lg:p-14">
+      <h2 id="highlights-heading" class="max-w-[12ch] text-[clamp(2.5rem,5.8vw,5rem)] leading-none font-bold tracking-tight text-balance">
+        {c.highlights.heading}
+      </h2>
+      <p class="mt-4 max-w-[40ch] leading-relaxed text-paper/80 sm:mt-5 sm:text-lg">
+        {c.highlights.description}
+      </p>
+      <span id="highlights-cta" class="mt-6 inline-flex min-h-11 items-center gap-2.5 rounded-full bg-lime px-5 py-2.5 text-sm font-semibold text-ink sm:mt-8">
+        {c.highlights.cta}
+        <span aria-hidden="true" class="text-base motion-safe:transition-transform motion-safe:group-hover:translate-x-1 motion-safe:group-focus-visible:translate-x-1">→</span>
+      </span>
+    </div>
+    <div class="relative aspect-[3/2] overflow-hidden md:aspect-auto md:min-h-[20rem] lg:min-h-[23rem]">
+      <Image src={highlightsPhoto} alt={c.highlights.photoAlt} loading="lazy" format="webp" quality={78}
+        widths={[400, 640, 960, 1280]} sizes="(min-width: 1472px) 720px, (min-width: 768px) 51vw, calc(100vw - 40px)"
+        class="absolute inset-0 size-full object-cover object-[25%_50%] motion-safe:transition-transform motion-safe:duration-500 motion-safe:group-hover:scale-[1.03] lg:object-right" />
+    </div>
+  </a>
+</section>
+
+<!-- Next event -->
 {
   upcomingEvents.length > 0 && (
     <section id="upcoming" class="scroll-mt-24 px-5 pt-16 pb-4 sm:px-8 md:pt-20 lg:px-[72px]">
@@ -212,6 +230,16 @@ const spotlightIcons = [
       </div>
 
       <div class="nexus-list reveal self-end" style="--reveal-delay: 180ms">
+        <figure class="mb-6">
+          <Image src={boothPhoto} alt={c.nexus.photoAlt} widths={[400, 640, 960]}
+            sizes="(min-width: 768px) 40vw, 94vw" format="webp" loading="lazy"
+            class="aspect-[1.9] w-full rounded-xl object-cover" />
+          <figcaption class="mt-2 text-sm text-muted">
+            <a class="underline decoration-teal underline-offset-4 hover:text-teal" href={localizedPath('/galleries/', lang) + (lang === 'zh' ? '#paris-2026-zh' : '#paris-2026')}>
+              {c.nexus.photosCta}<span aria-hidden="true"> →</span>
+            </a>
+          </figcaption>
+        </figure>
         {
           c.nexus.highlights.map((point, i) => (
             <div
@@ -275,9 +303,12 @@ const spotlightIcons = [
           {c.events.heading}
         </h2>
       </div>
-      <p class="max-w-md text-muted md:pb-2">
-        {c.events.description}
-      </p>
+      <div class="md:pb-2">
+        <p class="max-w-md text-muted">{c.events.description}</p>
+        <a href={localizedPath('/events/', lang)} class="tech-label mt-4 inline-flex items-center gap-2 rounded-full bg-lime px-5 py-3 text-ink hover:underline">
+          {c.events.cta}<span aria-hidden="true">→</span>
+        </a>
+      </div>
     </div>
 
     {
@@ -287,7 +318,7 @@ const spotlightIcons = [
         <div class="mt-12 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:auto-rows-[13rem] lg:grid-flow-row-dense lg:grid-cols-4">
           {pastEvents.map((ev, i) => (
             <a
-              href={ev.data.url ?? localizedPath('/events', lang)}
+              href={(lang === 'zh' && ev.data.urlZh) || ev.data.url || localizedPath('/events/', lang)}
               target={ev.data.url ? '_blank' : undefined}
               rel={ev.data.url ? 'noopener noreferrer' : undefined}
               class={`group reveal relative flex min-h-[13rem] flex-col overflow-hidden rounded-xl bg-ink text-paper ${bentoSpans[i] ?? ''}`}

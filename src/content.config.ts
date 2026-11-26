@@ -33,16 +33,32 @@ const blog = defineCollection({
     }),
 });
 
+const highlightCopy = z.object({ title: z.string(), summary: z.string() });
+const highlightResources = z.array(z.object({
+  en: z.string(),
+  zh: z.string(),
+  url: z.string().url(),
+  urlZh: z.string().url().optional(),
+})).default([]);
+
 const events = defineCollection({
   loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/events' }),
-  schema: ({ image }) =>
-    z.object({
+  schema: ({ image }) => {
+    const highlightVideo = z.object({
+      youtubeId: z.string().regex(/^[\w-]{11}$/),
+      thumbnail: image().optional(),
+      en: z.string(),
+      zh: z.string(),
+    }).optional();
+
+    return z.object({
       title: z.string(),
       description: z.string(),
       date: z.coerce.date(),
       // Human-readable date/range shown in the UI (e.g. "May 5–6, 2026").
       // Falls back to a formatted `date` when omitted.
       dateLabel: z.string().optional(),
+      endDate: z.coerce.date().optional(),
       location: z.string().optional(),
       // Card background image — a path *relative to this Markdown file* into
       // src/assets, e.g. "../../assets/events/paris.png". The image() helper
@@ -57,7 +73,26 @@ const events = defineCollection({
       urlZh: z.string().url().optional(),
       status: z.enum(['upcoming', 'past', 'draft']).default('upcoming'),
       lang: langEnum.default('en'),
-    }),
+      highlight: z.object({
+        en: highlightCopy,
+        zh: highlightCopy,
+        workshop: z.object({
+          en: highlightCopy,
+          zh: highlightCopy,
+          video: highlightVideo,
+          resources: highlightResources,
+        }).optional(),
+        spotlight: z.object({
+          en: highlightCopy,
+          zh: highlightCopy,
+          url: z.string().url(),
+        }).optional(),
+        photo: z.object({ image: image(), en: z.string(), zh: z.string() }).optional(),
+        video: highlightVideo,
+        resources: highlightResources,
+      }).optional(),
+    });
+  },
 });
 
 const projects = defineCollection({
@@ -73,12 +108,17 @@ const projects = defineCollection({
 
 const galleries = defineCollection({
   loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/galleries' }),
-  schema: z.object({
+  schema: ({ image }) => z.object({
     title: z.string(),
     description: z.string(),
     date: z.coerce.date().optional(),
     city: z.string().optional(),
     lang: langEnum.default('en'),
+    photos: z.array(z.object({
+      image: image(),
+      caption: z.string(),
+      alignTop: z.boolean().optional(),
+    })).default([]),
   }),
 });
 

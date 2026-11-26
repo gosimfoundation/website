@@ -12,12 +12,14 @@ const footerCols = [
     { href: `${home}#about`, label: t('nav.about') },
     { href: localizedPath('/founders', lang), label: t('nav.founders') },
     { href: `${home}#pillars`, label: t('nav.pillars') },
+    { href: localizedPath('/blog', lang), label: t('nav.stories') },
+    { href: `${home}#newsletter`, label: t('nav.newsletter') },
   ],
   [
     { href: `${home}#events`, label: t('nav.events') },
-    { href: localizedPath('/blog', lang), label: t('nav.stories') },
+    { href: localizedPath('/galleries/', lang), label: t('nav.galleries') },
+    { href: localizedPath('/hackathons/', lang), label: t('nav.hackathons') },
     { href: `${home}#spotlights`, label: t('nav.spotlights') },
-    { href: `${home}#newsletter`, label: t('nav.newsletter') },
   ],
 ];
 
@@ -53,7 +55,7 @@ const socials = [
 
 <footer class="mt-12 border-t border-line bg-mist/40">
   <div class="px-5 py-16 sm:px-8 lg:px-[72px]">
-    <div class="flex flex-col gap-12 md:flex-row md:items-start md:justify-between">
+    <div class="grid gap-12 md:grid-cols-[minmax(16rem,1fr)_auto_minmax(0,1fr)] md:items-start md:gap-x-8 lg:gap-x-12">
       <!-- Brand + social -->
       <div class="max-w-xs">
         <img src="/logo.svg" alt="GOSIM" width="112" height="32" class="w-28" />

@@ -1,13 +1,42 @@
 # Decap CMS configuration — maps the /admin web UI to the Markdown collections.
 #
-# backend: git-gateway works out of the box on Netlify. On GitHub Pages you
-# need the GitHub backend behind an external OAuth proxy (see README). Until
-# that's wired, `local_backend: true` lets editors run the CMS locally with:
+# Production auth is DecapBridge (https://decapbridge.com), a hosted stand-in
+# for Netlify's deprecated Git Gateway: it holds a fine-grained PAT scoped to
+# this repo (Contents + Pull requests, read/write) and signs editors in with
+# email + password. Invite editors from the DecapBridge dashboard — they need
+# no GitHub account. Local editing still works via:
 #     npx decap-server        # in one terminal
 #     npm run dev             # in another, then open http://localhost:4321/admin
+# but the local proxy does not support the editorial workflow — comment out
+# `publish_mode` below when testing writes locally.
+
+# Use DecapBridge classic auth (required)
 backend:
   name: git-gateway
+  repo: gosimfoundation/website
   branch: main
+  identity_url: https://auth.decapbridge.com/sites/89d7b31f-90a7-4f98-a0ec-3f1232d8b593
+  gateway_url: https://gateway.decapbridge.com
+
+  # See who did what (optional)
+  commit_messages:
+    create: Create {{collection}} “{{slug}}” - {{author-name}} <{{author-login}}> via DecapBridge
+    update: Update {{collection}} “{{slug}}” - {{author-name}} <{{author-login}}> via DecapBridge
+    delete: Delete {{collection}} “{{slug}}” - {{author-name}} <{{author-login}}> via DecapBridge
+    uploadMedia: Upload “{{path}}” - {{author-name}} <{{author-login}}> via DecapBridge
+    deleteMedia: Delete “{{path}}” - {{author-name}} <{{author-login}}> via DecapBridge
+    openAuthoring: Message {{message}} - {{author-name}} <{{author-login}}> via DecapBridge
+
+# Saving creates a draft PR instead of committing straight to main; Publish
+# merges it. With the build as a required check on main, a malformed post
+# stays an unmergeable draft rather than blocking every deploy.
+publish_mode: editorial_workflow
+
+# DecapBridge branding on the login screen (optional)
+logo_url: https://decapbridge.com/decapcms-with-bridge.svg
+
+# "View site" link in the CMS chrome (optional)
+site_url: https://gosim.org
 
 local_backend: true
 
@@ -67,6 +96,7 @@ collections:
       - { label: "Description", name: "description", widget: "text" }
       - { label: "Date", name: "date", widget: "datetime" }
       - { label: "Date label", name: "dateLabel", widget: "string", required: false, hint: "Shown in the UI, e.g. 'May 5–6, 2026'" }
+      - { label: "End date", name: "endDate", widget: "datetime", format: "YYYY-MM-DD", time_format: false, required: false }
       - { label: "Location", name: "location", widget: "string", required: false }
       # Uploads land in src/assets/events and are written into frontmatter as a
       # path relative to the Markdown file, which is what content.config.ts's
@@ -76,6 +106,105 @@ collections:
       - { label: "Call for Proposals URL", name: "cfp", widget: "string", required: false, hint: "CFP link; shown as a button on the upcoming-event banner" }
       - { label: "Website URL (中文)", name: "urlZh", widget: "string", required: false, hint: "Chinese event site; used on /zh (falls back to Website URL)" }
       - { label: "Status", name: "status", widget: "select", options: ["upcoming", "past", "draft"], default: "upcoming" }
+      - label: "Event highlights"
+        name: "highlight"
+        widget: "object"
+        required: false
+        collapsed: true
+        hint: "Add a bilingual highlight to feature a past event in the archive."
+        fields:
+          - label: "English"
+            name: "en"
+            widget: "object"
+            fields:
+              - { label: "Event name", name: "title", widget: "string" }
+              - { label: "Highlight", name: "summary", widget: "text", hint: "Link speaker names with Markdown links using HTTPS." }
+          - label: "中文"
+            name: "zh"
+            widget: "object"
+            fields:
+              - { label: "活动名称", name: "title", widget: "string" }
+              - { label: "活动亮点", name: "summary", widget: "text", hint: "使用 Markdown 为讲者姓名添加 HTTPS 链接。" }
+          - label: "Co-hosted Spotlight"
+            name: "spotlight"
+            widget: "object"
+            required: false
+            fields:
+              - label: "English"
+                name: "en"
+                widget: "object"
+                fields:
+                  - { label: "Spotlight name", name: "title", widget: "string" }
+                  - { label: "Summary", name: "summary", widget: "text" }
+              - label: "中文"
+                name: "zh"
+                widget: "object"
+                fields:
+                  - { label: "Spotlight 名称", name: "title", widget: "string" }
+                  - { label: "活动简介", name: "summary", widget: "text" }
+              - { label: "Spotlight URL", name: "url", widget: "string" }
+          - label: "Workshop highlight"
+            name: "workshop"
+            widget: "object"
+            required: false
+            fields:
+              - label: "English"
+                name: "en"
+                widget: "object"
+                fields:
+                  - { label: "Workshop name", name: "title", widget: "string" }
+                  - { label: "Summary", name: "summary", widget: "text" }
+              - label: "中文"
+                name: "zh"
+                widget: "object"
+                fields:
+                  - { label: "工作坊名称", name: "title", widget: "string" }
+                  - { label: "工作坊简介", name: "summary", widget: "text" }
+              - label: "YouTube recording"
+                name: "video"
+                widget: "object"
+                required: false
+                fields:
+                  - { label: "YouTube video ID", name: "youtubeId", widget: "string", pattern: ['^[A-Za-z0-9_-]{11}$', 'Enter the 11-character ID from the YouTube link.'] }
+                  - { label: "Thumbnail", name: "thumbnail", widget: "image", required: false }
+                  - { label: "Video title", name: "en", widget: "string" }
+                  - { label: "视频标题", name: "zh", widget: "string" }
+              - label: "Workshop links"
+                name: "resources"
+                widget: "list"
+                required: false
+                fields:
+                  - { label: "Link text", name: "en", widget: "string" }
+                  - { label: "链接文字", name: "zh", widget: "string" }
+                  - { label: "URL", name: "url", widget: "string" }
+                  - { label: "URL (中文)", name: "urlZh", widget: "string", required: false }
+          - label: "Highlight photo"
+            name: "photo"
+            widget: "object"
+            required: false
+            fields:
+              - { label: "Photo", name: "image", widget: "image" }
+              - { label: "Caption", name: "en", widget: "string" }
+              - { label: "图片说明", name: "zh", widget: "string" }
+          - label: "YouTube recording"
+            name: "video"
+            widget: "object"
+            required: false
+            fields:
+              - { label: "YouTube video ID", name: "youtubeId", widget: "string", pattern: ['^[A-Za-z0-9_-]{11}$', 'Enter the 11-character ID from the YouTube link.'] }
+              - { label: "Thumbnail", name: "thumbnail", widget: "image", required: false }
+              - { label: "Video title", name: "en", widget: "string" }
+              - { label: "视频标题", name: "zh", widget: "string" }
+          - label: "Featured resources"
+            name: "resources"
+            widget: "list"
+            required: false
+            hint: "Link to a specific talk, project, or related event. Use the event website field for the conference homepage, schedule, and slides."
+            fields:
+              - { label: "Link text", name: "en", widget: "string" }
+              - { label: "链接文字", name: "zh", widget: "string" }
+              - { label: "URL", name: "url", widget: "string" }
+              - { label: "URL (中文)", name: "urlZh", widget: "string", required: false }
       - { label: "Language", name: "lang", widget: "select", options: ["en", "zh"], default: "en" }
       - { label: "Body", name: "body", widget: "markdown" }
 
@@ -97,10 +226,19 @@ collections:
     folder: "src/content/galleries"
     create: true
     slug: "{{slug}}"
+    media_folder: "../../assets/galleries"
+    public_folder: "../../assets/galleries"
     fields:
       - { label: "Title", name: "title", widget: "string" }
       - { label: "Description", name: "description", widget: "text" }
       - { label: "Date", name: "date", widget: "datetime", required: false }
       - { label: "City", name: "city", widget: "string", required: false }
+      - label: "Photos"
+        name: "photos"
+        widget: "list"
+        fields:
+          - { label: "Photo", name: "image", widget: "image" }
+          - { label: "Caption", name: "caption", widget: "string" }
+          - { label: "Keep the top edge in the crop", name: "alignTop", widget: "boolean", default: false, required: false }
       - { label: "Language", name: "lang", widget: "select", options: ["en", "zh"], default: "en" }
       - { label: "Body", name: "body", widget: "markdown" }

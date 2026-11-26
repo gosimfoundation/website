@@ -1,0 +1,49 @@
+---
+import { Image } from 'astro:assets';
+
+interface Props {
+  youtubeId: string;
+  title: string;
+  playLabel: string;
+  thumbnail?: ImageMetadata;
+}
+const { youtubeId, title, playLabel, thumbnail } = Astro.props;
+const watchUrl = `https://www.youtube.com/watch?v=${youtubeId}`;
+const embedUrl = `https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&rel=0`;
+---
+
+<figure class="mt-5 max-w-lg" data-recording-preview>
+  <div class="relative aspect-video min-h-[200px] w-full overflow-hidden rounded-xl bg-ink">
+    <a href={watchUrl} aria-label={`${playLabel} · ${title}`}
+      class="group absolute inset-0 grid place-items-center focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-lime">
+      {thumbnail && (
+        <Image src={thumbnail} alt="" widths={[320, 520, 800, 1024]}
+          sizes="(min-width: 1280px) 512px, (min-width: 1024px) 44vw, (min-width: 640px) 512px, 94vw"
+          loading="lazy" format="webp" class="absolute inset-0 size-full object-contain" />
+      )}
+      <span aria-hidden="true" class="relative grid size-14 place-items-center rounded-full border border-paper/50 bg-ink/90 pl-0.5 text-xl text-paper shadow-sm transition-colors group-hover:border-lime group-hover:bg-lime group-hover:text-ink group-focus-visible:border-lime group-focus-visible:bg-lime group-focus-visible:text-ink">▶︎</span>
+    </a>
+    <iframe hidden data-src={embedUrl} title={title} class="absolute inset-0 size-full border-0"
+      allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+      referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+  </div>
+  <figcaption class="mt-2 text-sm font-medium text-muted">{title}</figcaption>
+</figure>
+
+<script>
+  for (const preview of document.querySelectorAll('[data-recording-preview]')) {
+    const trigger = preview.querySelector('a');
+    const player = preview.querySelector('iframe');
+    const source = player?.dataset.src;
+    if (!trigger || !player || !source) continue;
+
+    trigger.addEventListener('click', (event) => {
+      if (event.button !== 0 || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+      event.preventDefault();
+      player.src = source;
+      player.hidden = false;
+      trigger.hidden = true;
+      player.focus();
+    });
+  }
+</script>

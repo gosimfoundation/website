@@ -1,6 +1,7 @@
 ---
 import { getLangFromUrl, useTranslations, localizedPath, localeSwitchPaths } from '../i18n/utils';
 import LanguagePicker from './LanguagePicker.astro';
+import { getLocalizedEvents } from '../i18n/events';
 
 interface Props {
   /** Full-bleed hero pages start transparent; content pages start solid. */
@@ -11,6 +12,7 @@ const { transparent = false } = Astro.props;
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 const home = localizedPath('/', lang);
+const hasUpcoming = (await getLocalizedEvents(lang)).some(({ data }) => data.status === 'upcoming');
 
 // Nav mirrors the homepage sections (anchor links so they work from any page).
 // One array feeds both the desktop bar and the mobile drawer so the two can
@@ -20,45 +22,44 @@ const links = [
   { href: localizedPath('/founders', lang), label: t('nav.founders') },
   { href: `${home}#pillars`, label: t('nav.pillars') },
   { href: `${home}#events`, label: t('nav.events') },
-  { href: localizedPath('/blog', lang), label: t('nav.stories') },
+  { href: localizedPath('/galleries/', lang), label: t('nav.galleries') },
+  { href: localizedPath('/hackathons/', lang), label: t('nav.hackathons') },
   { href: `${home}#spotlights`, label: t('nav.spotlights') },
+  { href: localizedPath('/blog', lang), label: t('nav.stories') },
 ];
 
 const locales = localeSwitchPaths(Astro.url);
 ---
 
 <header class={`site-header fixed inset-x-0 top-0 z-20 ${transparent ? '' : 'is-solid'}`}>
-  {/* The logo/nav gap tightens below sm: the toggle is 16px wider than the
-      language picker it replaces there, which pushed the bar past 320px. */}
-  <div class="flex min-h-[78px] items-center justify-between gap-3 px-5 py-4 sm:gap-6 sm:px-8 lg:px-[72px]">
+  <div class="flex min-h-[78px] items-center justify-between gap-3 px-5 py-4 sm:gap-4 sm:px-8 lg:gap-6 lg:px-[72px]">
     <a href={home} class="shrink-0" aria-label="GOSIM home">
-      <img src="/logo.svg" alt="GOSIM" width="112" height="32" class="w-28" />
+      <img src="/logo.svg" alt="GOSIM" width="112" height="32" class="w-24 sm:w-28" />
     </a>
 
-    <nav class="flex items-center gap-4 text-sm sm:gap-6 lg:gap-8">
+    <nav class="flex items-center gap-2 text-sm min-[54rem]:gap-2.5 lg:gap-4 xl:gap-7">
       {
         links.map((l) => (
-          <a href={l.href} class="hidden transition-colors hover:text-teal sm:inline">
+          <a href={l.href} aria-current={Astro.url.pathname === l.href ? 'page' : undefined}
+            class="hidden transition-colors hover:text-teal aria-[current=page]:font-semibold aria-[current=page]:text-teal min-[54rem]:inline">
             {l.label}
           </a>
         ))
       }
 
-      {/* The picker moves into the drawer below sm — logo + picker + CTA +
-          toggle overflows a 390px bar. */}
-      <div class="hidden sm:block"><LanguagePicker /></div>
+      <div class="hidden min-[54rem]:block"><LanguagePicker /></div>
 
       <a
-        href={`${home}#upcoming`}
-        class="tech-label inline-flex min-h-[42px] items-center rounded-full bg-lime px-5 py-3 text-ink transition-transform hover:-translate-y-0.5"
+        href={hasUpcoming ? `${home}#upcoming` : localizedPath('/events/', lang)}
+        class="tech-label inline-flex min-h-[42px] items-center rounded-full bg-lime px-3 py-3 text-ink transition-transform hover:-translate-y-0.5 lg:px-5"
       >
-        {t('nav.upcoming')}
+        {t(hasUpcoming ? 'nav.upcoming' : 'nav.highlights')}
       </a>
 
       {/* A <details> disclosure rather than a scripted button: it opens with
           JS disabled, and DOM order already walks focus through the panel and
           back out, so no focus trap is needed. */}
-      <details class="mobile-nav sm:hidden">
+      <details class="mobile-nav min-[54rem]:hidden">
         <summary
           class="flex min-h-[44px] min-w-[44px] cursor-pointer items-center justify-center rounded-full text-ink transition-colors hover:text-teal"
           aria-label={t('nav.menu')}
@@ -77,7 +78,8 @@ const locales = localeSwitchPaths(Astro.url);
               links.map((l) => (
                 <a
                   href={l.href}
-                  class="border-b border-line py-4 text-lg transition-colors hover:text-teal"
+                  aria-current={Astro.url.pathname === l.href ? 'page' : undefined}
+                  class="border-b border-line py-4 text-lg transition-colors hover:text-teal aria-[current=page]:font-semibold aria-[current=page]:text-teal"
                 >
                   {l.label}
                 </a>
@@ -185,10 +187,9 @@ const locales = localeSwitchPaths(Astro.url);
       if (!nav.contains(e.target as Node)) close();
     });
 
-    // The desktop bar takes over at 640px; a panel left open would otherwise
-    // linger in the DOM, still open, when the viewport shrinks again.
+    // Close the drawer when the full menu takes over.
     window
-      .matchMedia('(min-width: 640px)')
+      .matchMedia('(min-width: 54rem)')
       .addEventListener('change', (e) => {
         if (e.matches) close();
       });

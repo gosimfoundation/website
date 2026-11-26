@@ -13,6 +13,12 @@ export const homeContent = {
         'GOSIM brings the open-source community together — nurturing the brightest grassroots projects across culture and language barriers, through its Conference, Workshop, and year-round Spotlight.',
       cta: 'Explore events',
     },
+    highlights: {
+      heading: 'Event highlights',
+      description: 'Watch DHH present Omarchy in Shenzhen, hear Fields Medalist Timothy Gowers discuss AI and mathematical proofs in Paris, and explore Hangzhou’s SGLang workshop.',
+      cta: 'Explore highlights',
+      photoAlt: 'David Heinemeier Hansson presents Omarchy to a full audience at GOSIM Shenzhen 2026.',
+    },
     nextEvent: { label: 'Next event', cta: 'Visit event site', cfp: 'Call for proposals' },
     nexus: {
       eyebrow: '// About GOSIM',
@@ -23,6 +29,8 @@ export const homeContent = {
       ],
       highlights: ['By and for the open-source community', 'Open, diverse, and inclusive', 'Volunteer-based'],
       foundersCta: 'Meet the founders',
+      photoAlt: 'Developers talking at a booth about AI agents at GOSIM Paris 2026.',
+      photosCta: 'Photos from GOSIM Paris 2026',
     },
     pillars: {
       eyebrow: '// What we do',
@@ -44,6 +52,7 @@ export const homeContent = {
     },
     events: {
       eyebrow: '// Past events',
+      cta: 'Explore event highlights',
       heading: 'Conferences and workshops',
       description:
         'GOSIM conferences and workshops across Paris, Hangzhou, Shenzhen, and beyond — each with its own program, talks, and stories.',
@@ -77,6 +86,12 @@ export const homeContent = {
       subtitle: 'GOSIM 汇聚全球开源社区——通过大会、工作坊与全年的聚焦计划，培育最杰出的草根项目，跨越文化与语言的边界。',
       cta: '浏览活动',
     },
+    highlights: {
+      heading: '往届活动回顾',
+      description: '重温 DHH 在深圳的 Omarchy 主题演讲、菲尔兹奖得主 Timothy Gowers 在巴黎对 AI 与数学证明的探讨，以及杭州的 SGLang 工作坊。',
+      cta: '浏览往届亮点',
+      photoAlt: 'David Heinemeier Hansson 在 GOSIM 深圳 2026 大会上向满场观众介绍 Omarchy。',
+    },
     nextEvent: { label: '下一场活动', cta: '访问活动网站', cfp: '议题征集' },
     nexus: {
       eyebrow: '// 关于 GOSIM',
@@ -87,6 +102,8 @@ export const homeContent = {
       ],
       highlights: ['由社区共建，服务社区', '开放、多元、包容', '完全志愿驱动'],
       foundersCta: '了解创始人',
+      photoAlt: 'GOSIM 巴黎 2026 的展台前，开发者正在交流 AI 智能体的应用。',
+      photosCta: '浏览 GOSIM 巴黎 2026 现场照片',
     },
     pillars: {
       eyebrow: '// 我们做什么',
@@ -108,6 +125,7 @@ export const homeContent = {
     },
     events: {
       eyebrow: '// 往届活动',
+      cta: '浏览往届活动回顾',
       heading: '大会与工作坊',
       description: 'GOSIM 大会与工作坊遍及巴黎、杭州、深圳等地——每一场都有各自的议程、演讲与故事。',
     },
